@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 3 - Select Screen Type | Cinema Booking</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Cinema Booking</h1>
+            <p>Book your tickets online, enjoy your movie!</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-step completed" data-step="1">
+                <div class="progress-circle">1</div>
+                <div class="progress-label">Movie</div>
+            </div>
+            <div class="progress-step completed" data-step="2">
+                <div class="progress-circle">2</div>
+                <div class="progress-label">Timing</div>
+            </div>
+            <div class="progress-step active" data-step="3">
+                <div class="progress-circle">3</div>
+                <div class="progress-label">Screen</div>
+            </div>
+            <div class="progress-step" data-step="4">
+                <div class="progress-circle">4</div>
+                <div class="progress-label">Seat</div>
+            </div>
+            <div class="progress-step" data-step="5">
+                <div class="progress-circle">5</div>
+                <div class="progress-label">Food</div>
+            </div>
+            <div class="progress-step" data-step="6">
+                <div class="progress-circle">6</div>
+                <div class="progress-label">Payment</div>
+            </div>
+            <div class="progress-step" data-step="7">
+                <div class="progress-circle">7</div>
+                <div class="progress-label">Confirm</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>Select Screen Type</h2>
+            <div class="info-box">
+                <strong>ℹ️ Choose</strong> your preferred screen experience and add the charge to your ticket.
+            </div>
+
+            <div class="grid" id="screenGrid"></div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="goBack()">← Back</button>
+                <button class="btn-primary" id="nextBtn" onclick="goToNextStep()" disabled>Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/booking.js"></script>
+    <script>
+        let selectedScreenId = null;
+
+        function renderScreenTypes() {
+            const grid = document.getElementById('screenGrid');
+            grid.innerHTML = SCREEN_TYPES.map(screen => `
+                <div class="card" data-screen-id="${screen.id}" onclick="selectScreen(${screen.id})">
+                    <div class="card-icon">${screen.icon}</div>
+                    <div class="card-title">${screen.name}</div>
+                    <div class="card-details">${screen.description}</div>
+                    <div class="card-price">+Rs. ${screen.price}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectScreen(screenId) {
+            selectedScreenId = screenId;
+            document.querySelectorAll('[data-screen-id]').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelector(`[data-screen-id="${screenId}"]`).classList.add('selected');
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function goToNextStep() {
+            bookingManager.updateBooking({ screenTypeId: selectedScreenId });
+            window.location.href = 'step4-seat.html';
+        }
+
+        function goBack() {
+            window.location.href = 'step2-timing.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const booking = bookingManager.getBooking();
+            if (!booking.showId) {
+                window.location.href = 'step2-timing.html';
+                return;
+            }
+            if (booking.screenTypeId) {
+                selectedScreenId = booking.screenTypeId;
+            }
+            renderScreenTypes();
+            if (selectedScreenId) {
+                document.querySelector(`[data-screen-id="${selectedScreenId}"]`).classList.add('selected');
+                document.getElementById('nextBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

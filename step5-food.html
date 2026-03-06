@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 5 - Food & Beverages | Cinema Booking</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .food-card {
+            display: flex;
+            flex-direction: column;
+        }
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .qty-input {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Cinema Booking</h1>
+            <p>Book your tickets online, enjoy your movie!</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-step completed" data-step="1">
+                <div class="progress-circle">1</div>
+                <div class="progress-label">Movie</div>
+            </div>
+            <div class="progress-step completed" data-step="2">
+                <div class="progress-circle">2</div>
+                <div class="progress-label">Timing</div>
+            </div>
+            <div class="progress-step completed" data-step="3">
+                <div class="progress-circle">3</div>
+                <div class="progress-label">Screen</div>
+            </div>
+            <div class="progress-step completed" data-step="4">
+                <div class="progress-circle">4</div>
+                <div class="progress-label">Seat</div>
+            </div>
+            <div class="progress-step active" data-step="5">
+                <div class="progress-circle">5</div>
+                <div class="progress-label">Food</div>
+            </div>
+            <div class="progress-step" data-step="6">
+                <div class="progress-circle">6</div>
+                <div class="progress-label">Payment</div>
+            </div>
+            <div class="progress-step" data-step="7">
+                <div class="progress-circle">7</div>
+                <div class="progress-label">Confirm</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>Order Food & Beverages</h2>
+            <div class="info-box">
+                <strong>ℹ️ Add items</strong> to make your cinema experience better (optional).
+            </div>
+
+            <div class="grid" id="foodGrid"></div>
+
+            <div class="summary" id="foodSummary" style="display:none;">
+                <h3>Food & Beverages</h3>
+                <div id="foodSummaryContent"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="goBack()">← Back</button>
+                <button class="btn-primary" onclick="goToNextStep()">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/booking.js"></script>
+    <script>
+        let selectedFood = {};
+
+        function renderFoodItems() {
+            const grid = document.getElementById('foodGrid');
+            grid.innerHTML = FOOD_ITEMS.map(food => `
+                <div class="card food-card" data-food-id="${food.id}">
+                    <div class="card-icon">${food.icon}</div>
+                    <div class="card-title">${food.name}</div>
+                    <div class="card-price">Rs. ${food.price}</div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="updateQty(${food.id}, -1)">−</button>
+                        <input type="text" class="qty-input" id="qty-${food.id}" value="0" readonly>
+                        <button class="qty-btn" onclick="updateQty(${food.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateQty(foodId, change) {
+            const qtyInput = document.getElementById(`qty-${foodId}`);
+            let qty = parseInt(qtyInput.value) + change;
+            qty = Math.max(0, qty);
+            qtyInput.value = qty;
+
+            if (qty > 0) {
+                const food = FOOD_ITEMS.find(f => f.id === foodId);
+                selectedFood[foodId] = { ...food, qty };
+            } else {
+                delete selectedFood[foodId];
+            }
+
+            updateFoodSummary();
+        }
+
+        function updateFoodSummary() {
+            const items = Object.values(selectedFood);
+            if (items.length === 0) {
+                document.getElementById('foodSummary').style.display = 'none';
+                return;
+            }
+
+            let foodTotal = 0;
+            let summary = items.map(item => {
+                const itemTotal = item.price * item.qty;
+                foodTotal += itemTotal;
+                return `
+                    <div class="summary-item">
+                        <span class="summary-label">${item.name} (x${item.qty}):</span>
+                        <span class="summary-value">Rs. ${itemTotal}</span>
+                    </div>
+                `;
+            }).join('');
+
+            summary += `
+                <div class="summary-item summary-total">
+                    <span class="summary-label">Food Total:</span>
+                    <span class="summary-value total-amount">Rs. ${foodTotal}</span>
+                </div>
+            `;
+
+            document.getElementById('foodSummaryContent').innerHTML = summary;
+            document.getElementById('foodSummary').style.display = 'block';
+        }
+
+        function goToNextStep() {
+            const foodArray = Object.values(selectedFood);
+            bookingManager.updateBooking({ food: foodArray });
+            window.location.href = 'step6-payment.html';
+        }
+
+        function goBack() {
+            window.location.href = 'step4-seat.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const booking = bookingManager.getBooking();
+            if (!booking.seatTypeId) {
+                window.location.href = 'step4-seat.html';
+                return;
+            }
+            
+            renderFoodItems();
+            
+            if (booking.food && Array.isArray(booking.food)) {
+                booking.food.forEach(food => {
+                    selectedFood[food.id] = food;
+                    document.getElementById(`qty-${food.id}`).value = food.qty;
+                });
+                updateFoodSummary();
+            }
+        });
+    </script>
+</body>
+</html>
