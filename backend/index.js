@@ -1,12 +1,18 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { getConnection } = require('./db');
+const initDb = require('./initDb');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 // Simple test endpoint
 app.get('/api/test', (req, res) => {
@@ -43,8 +49,19 @@ app.get('/api/movies', async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`🎭 THEATRO Backend running on port ${PORT}`);
-    console.log(`📍 http://localhost:${PORT}/api/test`);
+// Serve React frontend (when built into /public)
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// React Router catch-all — must be AFTER all API routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+// Start server and initialize DB
+app.listen(PORT, async () => {
+    console.log(`🎭 THEATRO App running on port ${PORT}`);
+    console.log(`📍 http://localhost:${PORT}`);
+    // Initialize required tables
+    await initDb();
 });

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>THEATRO</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        pre {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 5px;
+            text-align: left;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎭 THEATRO Cinema</h1>
+    
+    <div>
+        <button onclick="testBackend()">Test Backend</button>
+        <button onclick="loadMovies()">Load Movies</button>
+    </div>
+    
+    <pre id="result">Click a button...</pre>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        async function testBackend() {
+            const res = await fetch(`${API_URL}/test`);
+            const data = await res.json();
+            document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+        }
+        
+        async function loadMovies() {
+            const res = await fetch(`${API_URL}/movies`);
+            const data = await res.json();
+            document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

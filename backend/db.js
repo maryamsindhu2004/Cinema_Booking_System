@@ -1,17 +1,25 @@
 // Check if running in Docker
-const isDocker = process.env.DOCKER_ENV === 'true' || process.env.DB_HOST === 'database';
+const isDocker = process.env.DOCKER_ENV === 'true';
 
-const sql = isDocker ? require('mssql') : require('mssql/msnodesqlv8');
+let sql;
+try {
+    sql = isDocker ? require('mssql') : require('mssql/msnodesqlv8');
+} catch (err) {
+    if (!isDocker) {
+        console.warn("⚠️ msnodesqlv8 not installed, fallback to standard mssql.");
+    }
+    sql = require('mssql');
+}
 
 let config;
 
 if (isDocker) {
     // Docker uses SQL Authentication
     config = {
-        user: 'sa',
-        password: 'YourStrong!Passw0rd',
-        server: 'database',
-        database: 'TheatroDB',
+        user: process.env.DB_USER || 'sa',
+        password: process.env.DB_PASSWORD || 'YourStrong!Passw0rd',
+        server: process.env.DB_HOST || 'host.docker.internal',
+        database: process.env.DB_NAME || 'TheatroDB',
         options: {
             encrypt: true,
             trustServerCertificate: true,

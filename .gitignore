@@ -1,0 +1,9 @@
+node_modules/
+.vs/
+.env
+build/
+dist/
+*.sqlite
+*.db
+*.log
+.wsuo
