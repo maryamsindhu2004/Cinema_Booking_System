@@ -1,0 +1,37 @@
+
+
+services:
+  # Node.js Backend
+  backend:
+    build: ./backend
+    container_name: theatro_backend
+    ports:
+      - "5000:5000"
+    environment:
+      # Use host.docker.internal to connect to your local MSSQL
+      - DB_HOST=host.docker.internal
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong!Passw0rd
+      - DB_NAME=TheatroDB
+      # If using Windows Authentication, use these instead:
+      # - DB_HOST=host.docker.internal
+      # - DB_AUTH_TYPE=windows
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - theatro_network
+
+  # Nginx Frontend
+  frontend:
+    build: ./frontend
+    container_name: theatro_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - theatro_network
+
+networks:
+  theatro_network:
+    driver: bridge
