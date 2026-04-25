@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: theatro_app
+    ports:
+      - "5000:5000"
+    environment:
+      - DOCKER_ENV=true
+      - DB_HOST=host.docker.internal
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong!Passw0rd
+      - DB_NAME=TheatroDB
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
