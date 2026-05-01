@@ -29,19 +29,11 @@ if (isDocker) {
     console.log('🐳 Running in Docker mode');
 } else {
     // Local development - Windows Authentication
-    // IMPORTANT: Use this exact format for Windows Auth
     config = {
-        server: 'localhost',
-        database: 'TheatroDB',
-        driver: 'msnodesqlv8',  // Required for Windows Authentication
-        options: {
-            trustedConnection: true,  // This enables Windows Authentication
-            encrypt: false,           // Set to false for local
-            trustServerCertificate: true
-        }
+        connectionString: 'Driver={ODBC Driver 18 for SQL Server};Server=localhost;Database=TheatroDB;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;'
     };
     console.log('💻 Running locally - Windows Authentication');
-    console.log(`   Server: ${config.server}`);
+    console.log(`   Server: localhost`);
     console.log(`   User: ${process.env.USERNAME}`);
     console.log(`   Domain: ${process.env.COMPUTERNAME}`);
 }
@@ -57,7 +49,14 @@ async function getConnection() {
         }
         return pool;
     } catch (error) {
-        console.error('❌ Database connection failed:', error.message);
+        console.error('❌ Database connection failed:', error);
+        if (error && typeof error === 'object') {
+            for (const key in error) {
+                if (Object.prototype.hasOwnProperty.call(error, key)) {
+                    console.error(`  ${key}:`, error[key]);
+                }
+            }
+        }
         throw error;
     }
 }
@@ -79,12 +78,13 @@ async function testConnection() {
         console.log(`   Time: ${result.recordset[0].CurrentTime}`);
         return true;
     } catch (error) {
-        console.error('❌ Test failed:', error.message);
+        console.error('❌ Test failed:', error);
         return false;
     }
 }
 
 module.exports = { 
+    sql,
     getConnection, 
     testConnection 
 };

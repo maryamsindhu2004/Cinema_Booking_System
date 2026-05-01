@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #FF3366;
-  --bg-dark: #0f172a;
-  --bg-card: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --success: #10b981;
-  --error: #ef4444;
+  --primary: #bb86fc;
+  --bg-dark: #050505;
+  --bg-card: #121212;
+  --text-main: #ffffff;
+  --text-muted: #b0b0b0;
+  --success: #03dac6;
+  --error: #cf6679;
 }
 
 body {
@@ -27,7 +27,7 @@ body {
 .hero-section {
   padding: 1.25rem 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15,23,42,0.95);
+  background: rgba(5,5,5,0.95);
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
@@ -109,7 +109,7 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #db2777);
+  background: linear-gradient(135deg, #7c3aed, #bb86fc);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,22 +127,21 @@ body {
 }
 
 .logout-btn {
-  background: rgba(239,68,68,0.15);
-  border: 1px solid rgba(239,68,68,0.3);
-  color: #fca5a5;
+  background: rgba(187,134,252,0.1);
+  border: 1px solid rgba(187,134,252,0.3);
+  color: #bb86fc;
   border-radius: 9999px;
   padding: 0.3rem 0.85rem;
   font-size: 0.78rem;
   font-weight: 600;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: all 0.2s;
 }
 
 .logout-btn:hover {
-  background: rgba(239,68,68,0.3);
-  border-color: rgba(239,68,68,0.55);
-  color: #fff;
+  background: var(--primary);
+  color: #000;
 }
 
 /* ─── Main Content ───────────────────────── */

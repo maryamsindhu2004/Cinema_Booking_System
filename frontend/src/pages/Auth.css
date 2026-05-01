@@ -42,7 +42,7 @@
 .orb-2 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, #db2777, transparent);
+    background: radial-gradient(circle, #bb86fc, transparent);
     bottom: -100px;
     right: -100px;
     animation-delay: -3s;
@@ -108,7 +108,7 @@
     font-size: 1.8rem;
     font-weight: 800;
     letter-spacing: 0.12em;
-    background: linear-gradient(135deg, #a78bfa, #f472b6, #38bdf8);
+    background: linear-gradient(135deg, #bb86fc, #03dac6, #38bdf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -208,7 +208,7 @@
     margin-top: 0.5rem;
     width: 100%;
     padding: 0.85rem;
-    background: linear-gradient(135deg, #7c3aed, #db2777);
+    background: linear-gradient(135deg, #7c3aed, #bb86fc);
     border: none;
     border-radius: 12px;
     color: #fff;
@@ -285,5 +285,5 @@
 }
 
 .auth-switch a:hover {
-    color: #f472b6;
+    color: #03dac6;
 }
