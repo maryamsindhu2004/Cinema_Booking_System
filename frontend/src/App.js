@@ -8,7 +8,7 @@ import MyBookings from './pages/MyBookings';
 import './App.css';
 
 // ── Home / Dashboard ───────────────────────────────────────────────
-function Home({ user, onLogout }) {
+function Home({ user, onLogout, isDark, onToggleTheme }) {
     const navigate = useNavigate();
     const [dbStatus, setDbStatus] = useState(null);
     const [movies, setMovies] = useState([]);
@@ -64,6 +64,14 @@ function Home({ user, onLogout }) {
                             </div>
                         )}
                         <div className="user-pill">
+                            <button 
+                                className="theme-toggle" 
+                                onClick={() => onToggleTheme()} 
+                                style={{marginRight: '0.5rem'}}
+                                title="Toggle Theme"
+                            >
+                                {isDark ? '☀️' : '🌙'}
+                            </button>
                             <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
                             <div className="user-info">
                                 <span className="user-name">{user.name}</span>
@@ -143,25 +151,17 @@ function Home({ user, onLogout }) {
                             <div style={{position: 'relative'}}>
                                 <input 
                                     type="text" 
+                                    className="search-bar"
                                     placeholder="Search by title..." 
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    style={{
-                                        padding: '0.8rem 1.2rem', paddingLeft: '2.5rem', borderRadius: '30px', border: '1px solid #334155',
-                                        background: '#1e293b', color: '#fff', width: '250px', fontSize: '0.9rem',
-                                        outline: 'none', transition: '0.3s'
-                                    }}
                                 />
                                 <span style={{position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5}}>🔍</span>
                             </div>
                             
                             <button 
+                                className={`showing-now-btn ${showingOnly ? 'active' : ''}`}
                                 onClick={() => setShowingOnly(!showingOnly)}
-                                style={{
-                                    padding: '0.8rem 1.5rem', borderRadius: '30px', border: 'none',
-                                    background: showingOnly ? '#FF3366' : '#334155', color: '#fff',
-                                    cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', transition: '0.3s'
-                                }}
                             >
                                 {showingOnly ? 'View All' : 'Showing Now'}
                             </button>
@@ -244,14 +244,23 @@ function App() {
         setUser(null);
     };
 
+    const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
+
+    useEffect(() => {
+        localStorage.setItem('darkMode', darkMode);
+    }, [darkMode]);
+
+    const toggleDarkMode = () => setDarkMode(!darkMode);
+
     return (
+        <div className={darkMode ? 'dark-mode' : ''}>
         <Router>
             <Routes>
                 <Route
                     path="/"
                     element={
                         user
-                            ? <Home user={user} onLogout={handleLogout} />
+                            ? <Home user={user} onLogout={handleLogout} isDark={darkMode} onToggleTheme={toggleDarkMode} />
                             : <Navigate to="/login" replace />
                     }
                 />
@@ -299,6 +308,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
+        </div>
     );
 }
 
