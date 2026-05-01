@@ -209,7 +209,7 @@ INSERT INTO MovieGenre (movieId, genreId) VALUES (SCOPE_IDENTITY(), (SELECT genr
 
 -- Insert Items
 INSERT INTO Item (itemName, basePrice) VALUES ('Popcorn Large', 500.00), ('Coke', 200.00), ('Nachos', 450.00);
-
+INSERT INTO Item (itemName, basePrice) VALUES ('Popcorn Small', 300.00), ('Hot Dogs', 400.00), ('Cookies', 150.00),('mix nuts', 400.00), ('Chocolates', 250.00);
 
 -- 1. The Legend of Maula Jatt
 INSERT INTO Movie (title, duration, releaseDate, rating, language) 
@@ -413,6 +413,37 @@ select* from SeatType
 -- Screen 1 (IMAX) - 10 sample seats
 INSERT INTO Seat (screenId, seatTypeId, seatNo, rowNo, isActive, isWheelchairAllow)
 VALUES 
+(1, 2, 'F1', 'F', 1, 0),
+(1, 2, 'G2', 'G', 1, 0),
+(1, 1, 'H1', 'H', 1, 1),  -- Premium + wheelchair
+(1, 1, 'I2', 'I', 1, 0),
+(2, 3, 'F1', 'F', 1, 0),  
+(2, 3, 'G2', 'G', 1, 0),
+(2, 2, 'I1', 'I', 1, 0),
+(2, 2, 'H1', 'H', 1, 0);
+INSERT INTO Seat (screenId, seatTypeId, seatNo, rowNo, isActive, isWheelchairAllow)
+VALUES 
+(1, 2, 'F2', 'F', 1, 0),
+(1, 2, 'G1', 'G', 1, 0),
+(1, 1, 'H2', 'H', 1, 1),  -- Premium + wheelchair
+(1, 1, 'I1', 'I', 1, 0),
+(2, 3, 'F2', 'F', 1, 0),  
+(2, 3, 'G1', 'G', 1, 0),
+(2, 2, 'I2', 'I', 1, 0),
+(2, 2, 'H2', 'H', 1, 0),
+
+
+(2, 2, 'A1', 'A', 1, 0),
+(2, 2, 'A2', 'A', 1, 0),
+(2, 1, 'B1', 'B', 1, 1),  -- Premium + wheelchair
+(2, 1, 'B2', 'B', 1, 0),
+(2, 3, 'C1', 'C', 1, 0),  
+(2, 3, 'C2', 'C', 1, 0),
+(2, 2, 'D1', 'D', 1, 0),
+(2, 2, 'D2', 'D', 1, 0),
+(2, 1, 'E1', 'E', 1, 1),  -- Premium + wheelchair
+(2, 2, 'E2', 'E', 1, 0),
+
 (1, 2, 'A1', 'A', 1, 0),
 (1, 2, 'A2', 'A', 1, 0),
 (1, 1, 'B1', 'B', 1, 1),  -- Premium + wheelchair
@@ -423,6 +454,14 @@ VALUES
 (1, 2, 'D2', 'D', 1, 0),
 (1, 1, 'E1', 'E', 1, 1),  -- Premium + wheelchair
 (1, 2, 'E2', 'E', 1, 0);
+
+
+--SELECT screenId, cinemaId, screenTypeId, totalSeats, isActive 
+--FROM Screen 
+--ORDER BY screenId;
+
+
+--select * from Seat
 
 -- =============================================
 -- ADD MORE SHOWTIMES FOR ALL MOVIES
@@ -556,6 +595,121 @@ VALUES
 ((SELECT movieId FROM Movie WHERE title = 'Top Gun: Maverick'), 2, '2025-05-22', '10:00', '12:11', 0),
 ((SELECT movieId FROM Movie WHERE title = 'Animal'), 2, '2025-05-22', '13:00', '16:21', 0);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- =============================================
+-- ADD MORE SHOWTIMES FOR SCREEN 2 (Standard)
+-- =============================================
+
+-- First, check existing shows for screen 2
+SELECT showId, movieId, showDate, startTime, endTime 
+FROM ShowTable 
+WHERE screenId = 2 
+ORDER BY showDate, startTime;
+
+-- =============================================
+-- SHOWTIMES FOR MAY 23, 2025 (Friday)
+-- =============================================
+
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+-- Morning shows
+((SELECT movieId FROM Movie WHERE title = 'Barbie'), 2, '2025-05-23', '09:00', '10:54', 0),
+((SELECT movieId FROM Movie WHERE title = 'Top Gun: Maverick'), 2, '2025-05-23', '11:30', '13:41', 0),
+
+-- Afternoon shows
+((SELECT movieId FROM Movie WHERE title = 'Jawan'), 2, '2025-05-23', '14:00', '16:49', 0),
+((SELECT movieId FROM Movie WHERE title = 'The Legend of Maula Jatt'), 2, '2025-05-23', '17:30', '20:03', 0),
+
+-- Evening shows
+((SELECT movieId FROM Movie WHERE title = 'Pathaan'), 2, '2025-05-23', '20:30', '22:56', 0);
+
+-- =============================================
+-- SHOWTIMES FOR MAY 24, 2025 (Saturday - More shows)
+-- =============================================
+
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+-- Morning
+((SELECT movieId FROM Movie WHERE title = 'PK'), 2, '2025-05-24', '09:00', '14:40', 0),
+((SELECT movieId FROM Movie WHERE title = 'Barbie'), 2, '2025-05-24', '15:00', '16:54', 0),
+
+-- Afternoon
+((SELECT movieId FROM Movie WHERE title = 'Dunki'), 2, '2025-05-24', '17:30', '20:11', 0),
+
+-- Evening
+((SELECT movieId FROM Movie WHERE title = 'Animal'), 2, '2025-05-24', '20:30', '23:51', 0);
+
+-- =============================================
+-- SHOWTIMES FOR MAY 25, 2025 (Sunday)
+-- =============================================
+
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+((SELECT movieId FROM Movie WHERE title = 'The Batman'), 2, '2025-05-25', '10:00', '12:56', 0),
+((SELECT movieId FROM Movie WHERE title = 'John Wick: Chapter 4'), 2, '2025-05-25', '13:30', '16:19', 0),
+((SELECT movieId FROM Movie WHERE title = 'Rocky Aur Rani Kii Prem Kahaani'), 2, '2025-05-25', '17:00', '19:48', 0),
+((SELECT movieId FROM Movie WHERE title = 'Teefa in Trouble'), 2, '2025-05-25', '20:00', '22:35', 0);
+
+-- =============================================
+-- SHOWTIMES FOR MAY 26, 2025 (Monday)
+-- =============================================
+
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+((SELECT movieId FROM Movie WHERE title = 'Oppenheimer'), 2, '2025-05-26', '11:00', '14:00', 0),
+((SELECT movieId FROM Movie WHERE title = 'Mission Impossible – Dead Reckoning'), 2, '2025-05-26', '15:00', '17:43', 0),
+((SELECT movieId FROM Movie WHERE title = 'Barbie'), 2, '2025-05-26', '18:30', '20:24', 0);
+
+-- =============================================
+-- VERIFY ALL SHOWTIMES FOR SCREEN 2
+-- =============================================
+
+SELECT 
+    s.showId,
+    m.title AS Movie,
+    m.language,
+    s.showDate,
+    CAST(s.startTime AS VARCHAR(5)) AS StartTime,
+    CAST(s.endTime AS VARCHAR(5)) AS EndTime,
+    m.duration AS Minutes
+FROM ShowTable s
+JOIN Movie m ON s.movieId = m.movieId
+WHERE s.screenId = 2
+ORDER BY s.showDate, s.startTime;
+
+-- =============================================
+-- COUNT SHOWS PER DAY FOR SCREEN 2
+-- =============================================
+
+SELECT 
+    showDate,
+    COUNT(*) AS NumberOfShows
+FROM ShowTable
+WHERE screenId = 2
+GROUP BY showDate
+ORDER BY showDate;
 -- =============================================
 -- VERIFY ALL SHOWTIMES
 -- =============================================
@@ -576,3 +730,295 @@ JOIN Cinema c ON sc.cinemaId = c.cinemaId
 JOIN ScreenType st ON sc.screenTypeId = st.screenTypeId
 WHERE s.showDate >= '2025-05-20'
 ORDER BY s.showDate, s.startTime;
+
+select* from Item
+
+
+CREATE TABLE Refund (
+    refundId INT PRIMARY KEY IDENTITY(1,1),
+    bookingId INT NOT NULL,
+    refundDate DATETIME DEFAULT GETDATE(),
+    refundAmount DECIMAL(10,2) NOT NULL,
+    refundStatus VARCHAR(50) DEFAULT 'Processed',
+    FOREIGN KEY (bookingId) REFERENCES Booking(bookingId)
+);
+
+ALTER TABLE Users ADD loyaltyPoints INT DEFAULT 0;
+ALTER TABLE Booking add paymentMethod VARCHAR(50) DEFAULT 'Cash';
+select* from Users
+
+select* from Item
+--select* from Refund
+
+
+-- ===============================================
+-- FIRST: ADD 5 INDIAN MOVIES (Hindi)
+-- ===============================================
+
+-- 54. Tu Jhoothi Main Makkaar
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Tu Jhoothi Main Makkaar', 160, '2023-03-08', 'UA', 'Hindi');
+DECLARE @movie54 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie54, (SELECT genreId FROM Genre WHERE genreName='Romance')),
+(@movie54, (SELECT genreId FROM Genre WHERE genreName='Comedy'));
+
+-- 55. Selfiee
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Selfiee', 145, '2023-02-24', 'UA', 'Hindi');
+DECLARE @movie55 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie55, (SELECT genreId FROM Genre WHERE genreName='Comedy')),
+(@movie55, (SELECT genreId FROM Genre WHERE genreName='Drama'));
+
+-- 56. Shehzada
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Shehzada', 141, '2023-02-17', 'UA', 'Hindi');
+DECLARE @movie56 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie56, (SELECT genreId FROM Genre WHERE genreName='Action')),
+(@movie56, (SELECT genreId FROM Genre WHERE genreName='Comedy'));
+
+-- 57. Zara Hatke Zara Bachke
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Zara Hatke Zara Bachke', 132, '2023-06-02', 'UA', 'Hindi');
+DECLARE @movie57 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie57, (SELECT genreId FROM Genre WHERE genreName='Romance')),
+(@movie57, (SELECT genreId FROM Genre WHERE genreName='Comedy'));
+
+-- ===============================================
+-- ADD 5 PAKISTANI MOVIES (Urdu)
+-- ===============================================
+
+-- 58. Intezaar
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Intezaar', 130, '2023-07-14', 'PG', 'Urdu');
+DECLARE @movie58 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie58, (SELECT genreId FROM Genre WHERE genreName='Romance')),
+(@movie58, (SELECT genreId FROM Genre WHERE genreName='Drama'));
+
+-- 59. Money Back Guarantee
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Money Back Guarantee', 148, '2023-04-21', 'PG', 'Urdu');
+DECLARE @movie59 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie59, (SELECT genreId FROM Genre WHERE genreName='Comedy')),
+(@movie59, (SELECT genreId FROM Genre WHERE genreName='Action'));
+
+-- 60. Babylicious
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Babylicious', 125, '2023-08-11', 'PG', 'Urdu');
+DECLARE @movie60 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie60, (SELECT genreId FROM Genre WHERE genreName='Comedy')),
+(@movie60, (SELECT genreId FROM Genre WHERE genreName='Romance'));
+
+-- 61. Tich Button
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Tich Button', 142, '2022-11-11', 'PG', 'Urdu');
+DECLARE @movie61 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie61, (SELECT genreId FROM Genre WHERE genreName='Romance')),
+(@movie61, (SELECT genreId FROM Genre WHERE genreName='Comedy'));
+
+-- 62. Kamli
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Kamli', 115, '2022-06-03', 'PG', 'Urdu');
+DECLARE @movie62 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie62, (SELECT genreId FROM Genre WHERE genreName='Drama')),
+(@movie62, (SELECT genreId FROM Genre WHERE genreName='Musical'));
+
+-- ===============================================
+-- ADD 5 ENGLISH MOVIES
+-- ===============================================
+
+-- 63. Avatar: The Way of Water
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Avatar: The Way of Water', 192, '2022-12-16', 'PG-13', 'English');
+DECLARE @movie63 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie63, (SELECT genreId FROM Genre WHERE genreName='Action')),
+(@movie63, (SELECT genreId FROM Genre WHERE genreName='Sci-Fi'));
+
+-- 64. Spider-Man: Across the Spider-Verse
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Spider-Man: Across the Spider-Verse', 140, '2023-06-02', 'PG', 'English');
+DECLARE @movie64 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie64, (SELECT genreId FROM Genre WHERE genreName='Action')),
+(@movie64, (SELECT genreId FROM Genre WHERE genreName='Comedy'));
+
+-- 65. Guardians of the Galaxy Vol. 3
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Guardians of the Galaxy Vol. 3', 150, '2023-05-05', 'PG-13', 'English');
+DECLARE @movie65 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie65, (SELECT genreId FROM Genre WHERE genreName='Action')),
+(@movie65, (SELECT genreId FROM Genre WHERE genreName='Sci-Fi'));
+
+-- 66. Indiana Jones and the Dial of Destiny
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('Indiana Jones and the Dial of Destiny', 154, '2023-06-30', 'PG-13', 'English');
+DECLARE @movie66 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie66, (SELECT genreId FROM Genre WHERE genreName='Action')),
+(@movie66, (SELECT genreId FROM Genre WHERE genreName='Adventure'));
+
+-- 67. The Little Mermaid
+INSERT INTO Movie (title, duration, releaseDate, rating, language) 
+VALUES ('The Little Mermaid', 135, '2023-05-26', 'PG', 'English');
+DECLARE @movie67 INT = SCOPE_IDENTITY();
+INSERT INTO MovieGenre (movieId, genreId) VALUES 
+(@movie67, (SELECT genreId FROM Genre WHERE genreName='Musical')),
+(@movie67, (SELECT genreId FROM Genre WHERE genreName='Romance'));
+
+-- ===============================================
+-- NOW ADD SHOWS USING THE VARIABLES
+-- ===============================================
+
+-- Tu Jhoothi Main Makkaar (movie54)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie54, 2, '2025-07-01', '10:00', '12:40', 0),
+(@movie54, 2, '2025-07-01', '14:00', '16:40', 0),
+(@movie54, 2, '2025-07-01', '18:00', '20:40', 0),
+(@movie54, 2, '2025-07-02', '11:00', '13:40', 0),
+(@movie54, 2, '2025-07-02', '16:00', '18:40', 0);
+
+-- Selfiee (movie55)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie55, 2, '2025-07-03', '10:30', '12:55', 0),
+(@movie55, 2, '2025-07-03', '14:30', '16:55', 0),
+(@movie55, 2, '2025-07-03', '18:30', '20:55', 0),
+(@movie55, 2, '2025-07-04', '12:00', '14:25', 0),
+(@movie55, 2, '2025-07-04', '17:00', '19:25', 0);
+
+-- Shehzada (movie56)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie56, 2, '2025-07-05', '09:00', '11:21', 0),
+(@movie56, 2, '2025-07-05', '13:00', '15:21', 0),
+(@movie56, 2, '2025-07-05', '17:00', '19:21', 0),
+(@movie56, 2, '2025-07-05', '20:30', '22:51', 0);
+
+-- Zara Hatke Zara Bachke (movie57)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie57, 2, '2025-07-06', '10:00', '12:12', 0),
+(@movie57, 2, '2025-07-06', '13:30', '15:42', 0),
+(@movie57, 2, '2025-07-06', '17:00', '19:12', 0),
+(@movie57, 2, '2025-07-06', '20:00', '22:12', 0);
+
+-- Intezaar (movie58)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie58, 2, '2025-07-09', '10:00', '12:10', 0),
+(@movie58, 2, '2025-07-09', '13:30', '15:40', 0),
+(@movie58, 2, '2025-07-09', '17:00', '19:10', 0),
+(@movie58, 2, '2025-07-10', '11:00', '13:10', 0),
+(@movie58, 2, '2025-07-10', '15:30', '17:40', 0);
+
+-- Money Back Guarantee (movie59)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie59, 1, '2025-07-11', '10:00', '12:28', 0),
+(@movie59, 1, '2025-07-11', '14:00', '16:28', 0),
+(@movie59, 1, '2025-07-11', '18:00', '20:28', 0),
+(@movie59, 2, '2025-07-12', '12:00', '14:28', 0),
+(@movie59, 2, '2025-07-12', '17:00', '19:28', 0);
+
+-- Babylicious (movie60)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie60, 2, '2025-07-13', '09:30', '11:35', 0),
+(@movie60, 2, '2025-07-13', '12:30', '14:35', 0),
+(@movie60, 2, '2025-07-13', '15:30', '17:35', 0),
+(@movie60, 2, '2025-07-13', '18:30', '20:35', 0),
+(@movie60, 2, '2025-07-14', '11:00', '13:05', 0),
+(@movie60, 2, '2025-07-14', '16:00', '18:05', 0);
+
+-- Tich Button (movie61)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie61, 2, '2025-07-15', '10:00', '12:22', 0),
+(@movie61, 2, '2025-07-15', '13:30', '15:52', 0),
+(@movie61, 2, '2025-07-15', '17:00', '19:22', 0),
+(@movie61, 2, '2025-07-16', '14:00', '16:22', 0),
+(@movie61, 2, '2025-07-16', '19:00', '21:22', 0);
+
+-- Kamli (movie62)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie62, 2, '2025-07-17', '10:00', '11:55', 0),
+(@movie62, 2, '2025-07-17', '13:00', '14:55', 0),
+(@movie62, 2, '2025-07-17', '16:00', '17:55', 0),
+(@movie62, 2, '2025-07-17', '19:00', '20:55', 0),
+(@movie62, 2, '2025-07-18', '11:30', '13:25', 0),
+(@movie62, 2, '2025-07-18', '15:30', '17:25', 0);
+
+-- Avatar: The Way of Water (movie63)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie63, 1, '2025-07-19', '10:00', '13:12', 0),
+(@movie63, 1, '2025-07-19', '14:30', '17:42', 0),
+(@movie63, 1, '2025-07-19', '19:00', '22:12', 0),
+(@movie63, 1, '2025-07-20', '11:00', '14:12', 0),
+(@movie63, 1, '2025-07-20', '16:00', '19:12', 0),
+(@movie63, 1, '2025-07-20', '20:30', '23:42', 0);
+
+-- Spider-Man (movie64)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie64, 1, '2025-07-21', '10:00', '12:20', 0),
+(@movie64, 1, '2025-07-21', '13:30', '15:50', 0),
+(@movie64, 1, '2025-07-21', '17:00', '19:20', 0),
+(@movie64, 2, '2025-07-22', '10:30', '12:50', 0),
+(@movie64, 2, '2025-07-22', '14:00', '16:20', 0),
+(@movie64, 2, '2025-07-22', '18:00', '20:20', 0);
+
+-- Guardians of the Galaxy (movie65)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie65, 1, '2025-07-23', '10:30', '13:00', 0),
+(@movie65, 1, '2025-07-23', '14:30', '17:00', 0),
+(@movie65, 1, '2025-07-23', '18:30', '21:00', 0),
+(@movie65, 2, '2025-07-24', '11:00', '13:30', 0),
+(@movie65, 2, '2025-07-24', '15:30', '18:00', 0),
+(@movie65, 2, '2025-07-24', '19:30', '22:00', 0);
+
+-- Indiana Jones (movie66)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie66, 1, '2025-07-25', '10:00', '12:34', 0),
+(@movie66, 1, '2025-07-25', '14:00', '16:34', 0),
+(@movie66, 1, '2025-07-25', '18:00', '20:34', 0),
+(@movie66, 2, '2025-07-26', '12:00', '14:34', 0),
+(@movie66, 2, '2025-07-26', '16:30', '19:04', 0);
+
+-- The Little Mermaid (movie67)
+INSERT INTO ShowTable (movieId, screenId, showDate, startTime, endTime, isCancelled)
+VALUES 
+(@movie67, 2, '2025-07-27', '09:00', '11:15', 0),
+(@movie67, 2, '2025-07-27', '12:00', '14:15', 0),
+(@movie67, 2, '2025-07-27', '15:00', '17:15', 0),
+(@movie67, 2, '2025-07-27', '18:00', '20:15', 0),
+(@movie67, 2, '2025-07-28', '10:30', '12:45', 0),
+(@movie67, 2, '2025-07-28', '14:30', '16:45', 0),
+(@movie67, 2, '2025-07-28', '19:00', '21:15', 0);
+
+-- ===============================================
+-- VERIFY
+-- ===============================================
+SELECT 
+    m.title, 
+    m.language, 
+    COUNT(sh.showId) AS ShowCount
+FROM Movie m
+LEFT JOIN ShowTable sh ON m.movieId = sh.movieId
+WHERE m.movieId >= 54
+GROUP BY m.title, m.language
+ORDER BY m.language;
