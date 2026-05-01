@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MovieDetails from './pages/MovieDetails';
 import SeatSelection from './pages/SeatSelection';
+import MyBookings from './pages/MyBookings';
 import './App.css';
 
 // ── Home / Dashboard ───────────────────────────────────────────────
 function Home({ user, onLogout }) {
+    const navigate = useNavigate();
     const [dbStatus, setDbStatus] = useState(null);
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedGenre, setSelectedGenre] = useState('');
     const [selectedLang, setSelectedLang] = useState('');
+    const [search, setSearch] = useState('');
+    const [showingOnly, setShowingOnly] = useState(false);
 
     useEffect(() => {
         fetch('/api/db-test')
@@ -26,6 +30,8 @@ function Home({ user, onLogout }) {
         const query = new URLSearchParams();
         if (selectedGenre) query.append('genre', selectedGenre);
         if (selectedLang) query.append('language', selectedLang);
+        if (search) query.append('search', search);
+        if (showingOnly) query.append('showingOnly', 'true');
 
         fetch(`/api/movies?${query.toString()}`)
             .then(res => res.json())
@@ -34,7 +40,7 @@ function Home({ user, onLogout }) {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [selectedGenre, selectedLang]);
+    }, [selectedGenre, selectedLang, search, showingOnly]);
 
     const genres = ['Action', 'Drama', 'Comedy', 'Romance', 'Sci-Fi', 'Crime', 'Thriller', 'Horror'];
     const languages = ['English', 'Hindi', 'Urdu'];
@@ -61,8 +67,18 @@ function Home({ user, onLogout }) {
                             <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
                             <div className="user-info">
                                 <span className="user-name">{user.name}</span>
-                                {user.phoneNo && <span className="user-phone">{user.phoneNo}</span>}
+                                <div style={{display: 'flex', gap: '0.5rem', fontSize: '0.75rem'}}>
+                                    {user.phoneNo && <span className="user-phone">{user.phoneNo}</span>}
+                                    <span style={{color: '#fbbf24', fontWeight: 'bold'}}>✨ {user.loyaltyPoints || 0} pts</span>
+                                </div>
                             </div>
+                            <button 
+                                className="logout-btn" 
+                                onClick={() => navigate('/my-bookings')} 
+                                style={{marginRight: '0.5rem', background: 'rgba(255,255,255,0.05)'}}
+                            >
+                                My Bookings
+                            </button>
                             <button id="logout-btn" className="logout-btn" onClick={onLogout}>
                                 Sign Out
                             </button>
@@ -117,9 +133,39 @@ function Home({ user, onLogout }) {
                 </aside>
 
                 <main className="main-content">
-                    <div className="section-header">
-                        <h2>Now Showing</h2>
-                        <p>Explore films in {selectedGenre || 'all genres'} and {selectedLang || 'all languages'}</p>
+                    <div className="section-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'}}>
+                        <div>
+                            <h2 style={{margin: 0}}>{showingOnly ? '🔥 Showing Now' : '🎬 All Movies'}</h2>
+                            <p style={{margin: '0.5rem 0 0 0'}}>Explore films in {selectedGenre || 'all genres'} and {selectedLang || 'all languages'}</p>
+                        </div>
+                        
+                        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+                            <div style={{position: 'relative'}}>
+                                <input 
+                                    type="text" 
+                                    placeholder="Search by title..." 
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    style={{
+                                        padding: '0.8rem 1.2rem', paddingLeft: '2.5rem', borderRadius: '30px', border: '1px solid #334155',
+                                        background: '#1e293b', color: '#fff', width: '250px', fontSize: '0.9rem',
+                                        outline: 'none', transition: '0.3s'
+                                    }}
+                                />
+                                <span style={{position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5}}>🔍</span>
+                            </div>
+                            
+                            <button 
+                                onClick={() => setShowingOnly(!showingOnly)}
+                                style={{
+                                    padding: '0.8rem 1.5rem', borderRadius: '30px', border: 'none',
+                                    background: showingOnly ? '#FF3366' : '#334155', color: '#fff',
+                                    cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', transition: '0.3s'
+                                }}
+                            >
+                                {showingOnly ? 'View All' : 'Showing Now'}
+                            </button>
+                        </div>
                     </div>
 
                     {loading ? (
@@ -172,6 +218,23 @@ function App() {
         }
     });
 
+    // Refresh user info (loyalty points) on load
+    useEffect(() => {
+        if (user) {
+            const uid = user.userId || user.id;
+            fetch(`/api/user/${uid}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const updatedUser = { ...user, ...data.data };
+                        setUser(updatedUser);
+                        localStorage.setItem('theatro_user', JSON.stringify(updatedUser));
+                    }
+                })
+                .catch(err => console.log("Points sync failed", err));
+        }
+    }, []); // Run once on startup
+
     const handleLogin = (userData) => {
         setUser(userData);
     };
@@ -221,6 +284,14 @@ function App() {
                     element={
                         user
                             ? <SeatSelection />
+                            : <Navigate to="/login" replace />
+                    }
+                />
+                <Route
+                    path="/my-bookings"
+                    element={
+                        user
+                            ? <MyBookings />
                             : <Navigate to="/login" replace />
                     }
                 />

@@ -5,16 +5,29 @@ function SeatSelection() {
     const { showId } = useParams();
     const navigate = useNavigate();
     const [seats, setSeats] = useState([]);
+    const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedSeats, setSelectedSeats] = useState([]);
+    const [selectedItems, setSelectedItems] = useState({}); // { itemId: quantity }
+    const [showData, setShowData] = useState(null);
+    const [bookingStatus, setBookingStatus] = useState(null);
+
+    const user = JSON.parse(localStorage.getItem('theatro_user'));
 
     useEffect(() => {
-        fetch(`/api/shows/${showId}/seats`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) setSeats(data.data);
-                setLoading(true); // Small delay for effect
-                setTimeout(() => setLoading(false), 500);
+        // Fetch Seats
+        const fetchSeats = fetch(`/api/shows/${showId}/seats`).then(res => res.json());
+        // Fetch Food Items
+        const fetchItems = fetch('/api/items').then(res => res.json());
+        // Fetch Show Details (for screen price)
+        const fetchShow = fetch(`/api/shows/${showId}`).then(res => res.json());
+ 
+        Promise.all([fetchSeats, fetchItems, fetchShow])
+            .then(([seatData, itemData, showRes]) => {
+                if (seatData.success) setSeats(seatData.data);
+                if (itemData.success) setMenuItems(itemData.data);
+                if (showRes.success) setShowData(showRes.data);
+                setLoading(false);
             })
             .catch(() => setLoading(false));
     }, [showId]);
@@ -27,10 +40,70 @@ function SeatSelection() {
         }
     };
 
-    const totalPrice = selectedSeats.reduce((total, seatId) => {
-        const seat = seats.find(s => s.seatId === seatId);
+    const updateItemQty = (itemId, delta) => {
+        const current = selectedItems[itemId] || 0;
+        const next = Math.max(0, current + delta);
+        setSelectedItems({ ...selectedItems, [itemId]: next });
+    };
+
+    const seatTotal = selectedSeats.reduce((total, id) => {
+        const seat = seats.find(s => s.seatId === id);
         return total + (seat ? seat.priceSeat : 0);
     }, 0);
+
+    const foodTotal = Object.entries(selectedItems).reduce((total, [itemId, qty]) => {
+        const item = menuItems.find(i => i.itemId === parseInt(itemId));
+        return total + (item ? item.basePrice * qty : 0);
+    }, 0);
+ 
+    const screenPrice = showData ? showData.priceScreen : 0;
+    const totalAmount = seatTotal + foodTotal + screenPrice;
+
+    const [redeemNachos, setRedeemNachos] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('Cash');
+    const [needsWheelchair, setNeedsWheelchair] = useState(false);
+
+    const handleConfirm = async () => {
+        if (selectedSeats.length === 0) {
+            alert('Please select at least one seat.');
+            return;
+        }
+
+        setBookingStatus('booking');
+        
+        const bookingData = {
+            userId: user.userId || user.id,
+            showId: parseInt(showId),
+            seats: selectedSeats,
+            redeemNachos: redeemNachos,
+            paymentMethod: paymentMethod,
+            needsWheelchair: needsWheelchair,
+            items: Object.entries(selectedItems)
+                .filter(([_, qty]) => qty > 0)
+                .map(([id, qty]) => ({ itemId: parseInt(id), quantity: qty })),
+            totalAmount: totalAmount
+        };
+
+        try {
+            const res = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                setBookingStatus('success');
+                setTimeout(() => navigate('/'), 3000);
+            } else {
+                alert('Error: ' + data.error);
+                setBookingStatus(null);
+            }
+        } catch (error) {
+            alert('Booking failed. Please try again.');
+            setBookingStatus(null);
+        }
+    };
 
     // Group seats by row
     const rows = seats.reduce((acc, seat) => {
@@ -39,129 +112,174 @@ function SeatSelection() {
         return acc;
     }, {});
 
+    if (bookingStatus === 'success') {
+        return (
+            <div className="main-content" style={{textAlign: 'center', paddingTop: '100px'}}>
+                <div style={{fontSize: '5rem'}}>🍿</div>
+                <h1 style={{color: '#10b981'}}>Booking Confirmed!</h1>
+                <p>Your tickets have been reserved. Enjoy your movie!</p>
+                <p style={{color: '#94a3b8'}}>Redirecting to Home...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="main-content">
-            <button className="logout-btn" onClick={() => navigate(-1)} style={{marginBottom: '2rem'}}>
-                &larr; Back to Shows
-            </button>
+            <button className="logout-btn" onClick={() => navigate(-1)} style={{marginBottom: '2rem'}}>&larr; Back</button>
 
-            <div className="section-header">
-                <h2>Select Your Seats</h2>
-                <p>Choose your preferred seats in the theater</p>
-            </div>
-
-            <div className="booking-layout" style={{display: 'grid', gridTemplateColumns: '1fr 350px', gap: '3rem'}}>
-                <div className="seat-map-container">
-                    <div className="screen-divider" style={{
-                        height: '6px', 
-                        background: 'linear-gradient(90deg, transparent, #FF3366, transparent)', 
-                        borderRadius: '10px',
-                        marginBottom: '4rem',
-                        textAlign: 'center',
-                        color: 'rgba(255,51,102,0.5)',
-                        fontSize: '0.8rem',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        letterSpacing: '5px'
-                    }}>
-                        SCREEN
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 380px', gap: '3rem'}}>
+                <div>
+                    <h2 style={{marginBottom: '2rem'}}>Interactive Seat Map</h2>
+                    <div style={{background: 'rgba(255,255,255,0.05)', padding: '3rem', borderRadius: '20px', textAlign: 'center'}}>
+                        <div className="screen-divider" style={{marginBottom: '4rem'}}>SCREEN</div>
+                        {loading ? <div className="loader-spinner"></div> : (
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.8rem'}}>
+                                {Object.entries(seats.reduce((acc, seat) => {
+                                    const row = seat.rowNo;
+                                    if (!acc[row]) acc[row] = [];
+                                    acc[row].push(seat);
+                                    return acc;
+                                }, {})).sort().map(([rowNo, rowSeats]) => (
+                                    <div key={rowNo} style={{display: 'flex', justifyContent: 'center', gap: '0.5rem'}}>
+                                        {rowSeats.map(seat => (
+                                            <div 
+                                                key={seat.seatId}
+                                                onClick={() => !seat.isBooked && toggleSeat(seat.seatId)}
+                                                style={{
+                                                    width: '32px', height: '32px', borderRadius: '4px',
+                                                    background: seat.isBooked ? '#334155' : selectedSeats.includes(seat.seatId) ? '#FF3366' : 'rgba(255,255,255,0.1)',
+                                                    cursor: seat.isBooked ? 'not-allowed' : 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                {seat.isWheelchairAllow ? '♿' : seat.seatNo}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                                {seats.length === 0 && (
+                                    <div style={{color: '#94a3b8', padding: '2rem'}}>
+                                        <div style={{fontSize: '2rem'}}>💺 ❓</div>
+                                        <p>No seats found for this screen.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    {loading ? (
-                        <div className="loader">
-                            <div className="loader-spinner"></div>
-                        </div>
-                    ) : (
-                        <div className="rows-container" style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                            {Object.entries(rows).map(([rowNo, rowSeats]) => (
-                                <div key={rowNo} style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem'}}>
-                                    <span style={{width: '20px', color: '#94a3b8', fontWeight: '700'}}>{rowNo}</span>
-                                    <div style={{display: 'flex', gap: '0.5rem'}}>
-                                        {rowSeats.map(seat => {
-                                            const isSelected = selectedSeats.includes(seat.seatId);
-                                            const isBooked = seat.isBooked;
-                                            return (
-                                                <div 
-                                                    key={seat.seatId}
-                                                    onClick={() => !isBooked && toggleSeat(seat.seatId)}
-                                                    style={{
-                                                        width: '35px',
-                                                        height: '35px',
-                                                        borderRadius: '6px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: '700',
-                                                        cursor: isBooked ? 'not-allowed' : 'pointer',
-                                                        background: isBooked ? '#334155' : isSelected ? '#FF3366' : 'rgba(255,255,255,0.05)',
-                                                        border: `1px solid ${isBooked ? '#475569' : isSelected ? '#FF3366' : 'rgba(255,255,255,0.1)'}`,
-                                                        color: isBooked ? '#64748b' : isSelected ? '#fff' : '#94a3b8',
-                                                        transition: 'all 0.2s',
-                                                        position: 'relative'
-                                                    }}
-                                                    title={`${seat.category} - Rs. ${seat.priceSeat}`}
-                                                >
-                                                    {seat.seatNo}
-                                                    {seat.isWheelchairAllow === 1 && <span style={{position: 'absolute', bottom: '-2px', right: '-2px', fontSize: '0.5rem'}}>♿</span>}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    <span style={{width: '20px', color: '#94a3b8', fontWeight: '700'}}>{rowNo}</span>
+                    <h2 style={{marginTop: '3rem', marginBottom: '1.5rem'}}>Order Snacks</h2>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                        {menuItems.map(item => (
+                            <div key={item.itemId} style={{
+                                background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                            }}>
+                                <div>
+                                    <h4 style={{margin: 0}}>{item.itemName}</h4>
+                                    <p style={{margin: 0, color: '#10b981', fontSize: '0.9rem'}}>Rs. {item.basePrice}</p>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="legend" style={{marginTop: '4rem', display: 'flex', justifyContent: 'center', gap: '2rem'}}>
-                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#94a3b8'}}>
-                            <div style={{width: '15px', height: '15px', borderRadius: '3px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'}}></div> Available
-                        </div>
-                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#94a3b8'}}>
-                            <div style={{width: '15px', height: '15px', borderRadius: '3px', background: '#FF3366'}}></div> Selected
-                        </div>
-                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#94a3b8'}}>
-                            <div style={{width: '15px', height: '15px', borderRadius: '3px', background: '#334155'}}></div> Occupied
-                        </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '0.8rem'}}>
+                                    <button onClick={() => updateItemQty(item.itemId, -1)} style={{width: '25px', height: '25px', borderRadius: '50%', border: 'none', background: '#334155', color: '#fff'}}>-</button>
+                                    <span>{selectedItems[item.itemId] || 0}</span>
+                                    <button onClick={() => updateItemQty(item.itemId, 1)} style={{width: '25px', height: '25px', borderRadius: '50%', border: 'none', background: '#FF3366', color: '#fff'}}>+</button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                <aside className="booking-summary" style={{
-                    background: 'rgba(30, 41, 59, 0.5)',
-                    borderRadius: '20px',
-                    padding: '2rem',
-                    height: 'fit-content',
-                    border: '1px solid rgba(255,255,255,0.05)'
-                }}>
-                    <h3 style={{marginTop: 0, marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem'}}>Order Summary</h3>
+                <aside style={{background: 'rgba(30, 41, 59, 0.8)', padding: '2rem', borderRadius: '20px', height: 'fit-content'}}>
+                    <h3 style={{marginTop: 0, borderBottom: '1px solid #334155', paddingBottom: '1rem'}}>Booking Summary</h3>
                     
-                    {selectedSeats.length > 0 ? (
-                        <>
-                            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem'}}>
-                                {selectedSeats.map(id => {
-                                    const seat = seats.find(s => s.seatId === id);
-                                    return (
-                                        <div key={id} style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem'}}>
-                                            <span>Seat {seat.rowNo}{seat.seatNo} <small style={{color: '#94a3b8'}}>({seat.category})</small></span>
-                                            <span style={{fontWeight: '600'}}>Rs. {seat.priceSeat}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '2rem'}}>
-                                <span style={{fontWeight: '700', fontSize: '1.1rem'}}>Total Amount</span>
-                                <span style={{fontWeight: '800', fontSize: '1.3rem', color: '#FF3366'}}>Rs. {totalPrice}</span>
-                            </div>
-                            <button className="book-btn" style={{width: '100%', padding: '1rem'}} onClick={() => alert('Booking logic coming soon!')}>
-                                Confirm Booking
-                            </button>
-                        </>
-                    ) : (
-                        <div style={{textAlign: 'center', color: '#94a3b8', padding: '2rem 0'}}>
-                            <p>No seats selected</p>
+                    <div style={{marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                            <span>Seats ({selectedSeats.length})</span>
+                            <span>Rs. {seatTotal}</span>
                         </div>
-                    )}
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                            <span>Food & Snacks</span>
+                            <span>Rs. {foodTotal}</span>
+                        </div>
+                        <div style={{display: 'flex', justifyContent: 'space-between', color: '#60a5fa', fontSize: '0.9rem'}}>
+                            <span>Screen Fee ({showData?.typeName})</span>
+                            <span>+ Rs. {screenPrice}</span>
+                        </div>
+
+                        {user.loyaltyPoints >= 20 && (
+                            <div style={{
+                                marginTop: '1rem', padding: '1rem', background: 'rgba(251, 191, 36, 0.1)', 
+                                border: '1px dashed #fbbf24', borderRadius: '8px'
+                            }}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', color: '#fbbf24'}}>
+                                    <input 
+                                        type="checkbox" 
+                                        id="redeem"
+                                        checked={redeemNachos}
+                                        onChange={(e) => setRedeemNachos(e.target.checked)}
+                                        style={{width: '18px', height: '18px', cursor: 'pointer'}}
+                                    />
+                                    <label htmlFor="redeem" style={{cursor: 'pointer', fontWeight: 'bold'}}>
+                                        🎁 Redeem 20 pts for Free Nachos!
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{marginTop: '1.5rem'}}>
+                            <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#94a3b8'}}>Payment Method</label>
+                            <select 
+                                value={paymentMethod} 
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                style={{
+                                    width: '100%', padding: '0.8rem', background: '#334155', 
+                                    border: '1px solid #475569', borderRadius: '8px', color: '#fff',
+                                    fontSize: '1rem'
+                                }}
+                            >
+                                <option value="Cash">By Cash</option>
+                                <option value="Mobile App">By Mobile App</option>
+                                <option value="Bank Card">By Bank Card</option>
+                            </select>
+                        </div>
+
+                        <div style={{
+                            marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', 
+                            border: '1px solid #3b82f6', borderRadius: '8px',
+                            opacity: seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow) ? 1 : 0.5
+                        }}>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '10px', color: '#60a5fa'}}>
+                                <input 
+                                    type="checkbox" 
+                                    id="wheelchair"
+                                    disabled={!seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow)}
+                                    checked={needsWheelchair && seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow)}
+                                    onChange={(e) => setNeedsWheelchair(e.target.checked)}
+                                    style={{width: '18px', height: '18px', cursor: 'pointer'}}
+                                />
+                                <label htmlFor="wheelchair" style={{cursor: 'pointer', fontSize: '0.9rem'}}>
+                                    ♿ Request Wheelchair Assistance
+                                    {!seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow) && 
+                                        <div style={{fontSize: '0.7rem', color: '#94a3b8'}}>(Select a ♿ seat to enable)</div>
+                                    }
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #334155', paddingTop: '1rem', fontSize: '1.3rem', fontWeight: '800'}}>
+                            <span>Total</span>
+                            <span style={{color: '#FF3366'}}>Rs. {totalAmount}</span>
+                        </div>
+                    </div>
+
+                    <button 
+                        className="book-btn" 
+                        disabled={bookingStatus === 'booking'}
+                        onClick={handleConfirm}
+                        style={{width: '100%', marginTop: '2rem', padding: '1rem', fontSize: '1.1rem'}}
+                    >
+                        {bookingStatus === 'booking' ? 'Processing...' : 'Confirm & Book'}
+                    </button>
                 </aside>
             </div>
         </div>

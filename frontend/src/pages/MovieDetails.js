@@ -6,82 +6,162 @@ function MovieDetails() {
     const navigate = useNavigate();
     const [shows, setShows] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [weekendOnly, setWeekendOnly] = useState(false);
 
     useEffect(() => {
-        fetch(`/api/movies/${id}/shows`)
+        setLoading(true);
+        fetch(`/api/movies/${id}/shows?weekendOnly=${weekendOnly}`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) setShows(data.data);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [id]);
+    }, [id, weekendOnly]);
 
     const formatTime = (timeStr) => {
         if (!timeStr) return 'N/A';
-        
-        // If it's an ISO string like "1970-01-01T11:00:00.000Z"
         if (typeof timeStr === 'string' && timeStr.includes('T')) {
-            const timePart = timeStr.split('T')[1]; // Get "11:00:00.000Z"
-            return timePart.substring(0, 5); // Get "11:00"
+            return timeStr.split('T')[1].substring(0, 5);
         }
-        
-        // If it's already a clean HH:mm string
-        if (typeof timeStr === 'string' && timeStr.includes(':')) {
-            return timeStr.substring(0, 5); 
-        }
-
-        // Fallback for Date objects
-        const d = new Date(timeStr);
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        return timeStr.substring(0, 5);
     };
 
-    return (
-        <div className="main-content">
-            <button className="logout-btn" onClick={() => navigate('/')} style={{marginBottom: '2rem'}}>
-                &larr; Back to Movies
-            </button>
+    const groupedShows = shows.reduce((acc, show) => {
+        const cinema = show.cinemaName;
+        const date = new Date(show.showDate).toLocaleDateString(undefined, { 
+            weekday: 'short', month: 'short', day: 'numeric' 
+        });
+        
+        if (!acc[cinema]) acc[cinema] = {};
+        if (!acc[cinema][date]) acc[cinema][date] = {};
+        if (!acc[cinema][date][show.screenType]) acc[cinema][date][show.screenType] = {
+            price: show.priceScreen,
+            desc: show.screenDesc,
+            hasWheelchair: show.wheelchairCount > 0,
+            times: []
+        };
+        
+        acc[cinema][date][show.screenType].times.push(show);
+        return acc;
+    }, {});
 
-            <div className="section-header">
-                <h2>Available Showtimes</h2>
-                <p>Select a cinema and time to book seats</p>
+    return (
+        <div className="main-content" style={{padding: '1rem'}}>
+            <div style={{display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center'}}>
+                <button className="logout-btn" onClick={() => navigate('/')} style={{padding: '0.5rem 1rem', fontSize: '0.9rem', margin: 0}}>
+                    &larr; Back
+                </button>
+                <button 
+                    onClick={() => setWeekendOnly(!weekendOnly)}
+                    style={{
+                        padding: '0.5rem 1.2rem', borderRadius: '30px', border: 'none',
+                        background: weekendOnly ? '#FF3366' : '#334155', color: '#fff',
+                        cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', transition: '0.3s'
+                    }}
+                >
+                    {weekendOnly ? '🎉 Weekend Selected (Fri-Sun)' : '📅 All Days'}
+                </button>
             </div>
 
             {loading ? (
                 <div className="loader">
                     <div className="loader-spinner"></div>
-                    <span>Finding showtimes…</span>
                 </div>
-            ) : shows.length > 0 ? (
-                <div className="movie-grid">
-                    {shows.map((show) => (
-                        <div key={show.showId} className="movie-card">
-                            <div className="movie-content">
-                                <h3 style={{color: '#FF3366'}}>{show.cinemaName}</h3>
-                                <p style={{marginBottom: '0.5rem'}}>{show.location}</p>
-                                <div style={{display: 'flex', gap: '0.5rem', marginBottom: '1rem'}}>
-                                    <span className="genre">{show.screenType}</span>
-                                    <span className="genre" style={{background: 'rgba(16, 185, 129, 0.1)', color: '#10b981'}}>
-                                        {new Date(show.showDate).toLocaleDateString()}
-                                    </span>
+            ) : Object.keys(groupedShows).length > 0 ? (
+                Object.entries(groupedShows).map(([cinemaName, dates]) => (
+                    <div key={cinemaName} style={{marginBottom: '2rem'}}>
+                        <h2 style={{color: '#FF3366', fontSize: '1.8rem', marginBottom: '0.2rem'}}>{cinemaName}</h2>
+                        <p style={{color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem'}}>📍 {shows.find(s => s.cinemaName === cinemaName)?.location}</p>
+
+                        {Object.entries(dates).map(([dateStr, screens]) => (
+                            <div key={dateStr} style={{
+                                background: 'rgba(30, 41, 59, 0.5)',
+                                borderRadius: '12px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                overflow: 'hidden',
+                                marginBottom: '1rem'
+                            }}>
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    padding: '0.75rem',
+                                    textAlign: 'left',
+                                    paddingLeft: '1.5rem',
+                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                    fontSize: '1rem',
+                                    fontWeight: '700',
+                                    color: '#10b981'
+                                }}>
+                                    {dateStr}
                                 </div>
-                                <p style={{fontSize: '1.2rem', fontWeight: '700', margin: 0}}>
-                                    🕒 {formatTime(show.startTime)} - {formatTime(show.endTime)}
-                                </p>
+
+                                <div style={{display: 'flex'}}>
+                                    {Object.entries(screens).map(([screenType, screenData], idx) => (
+                                        <div key={screenType} style={{
+                                            flex: 1,
+                                            borderRight: idx < Object.keys(screens).length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                                            display: 'flex',
+                                            flexDirection: 'column'
+                                        }}>
+                                            <div style={{
+                                                padding: '0.75rem',
+                                                background: 'rgba(255,255,255,0.02)',
+                                                textAlign: 'center',
+                                                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                                            }}>
+                                                <h3 style={{
+                                                    margin: 0, 
+                                                    fontSize: '1rem', 
+                                                    textTransform: 'uppercase', 
+                                                    letterSpacing: '2px',
+                                                    color: '#fff'
+                                                }}>
+                                                    {screenType} SCREEN
+                                                </h3>
+                                                <div style={{
+                                                    display: 'flex', 
+                                                    justifyContent: 'center', 
+                                                    alignItems: 'center', 
+                                                    gap: '1rem',
+                                                    marginTop: '0.2rem'
+                                                }}>
+                                                    {screenData.hasWheelchair && <span title="Wheelchair Accessible" style={{fontSize: '0.9rem'}}>♿</span>}
+                                                    <span style={{fontSize: '0.85rem', color: '#10b981', fontWeight: '700'}}>Rs. {screenData.price}</span>
+                                                </div>
+                                            </div>
+
+                                            <div style={{padding: '1rem', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem'}}>
+                                                {screenData.times.map(show => (
+                                                    <button 
+                                                        key={show.showId} 
+                                                        onClick={() => navigate(`/book/${show.showId}`)}
+                                                        style={{
+                                                            fontSize: '0.85rem',
+                                                            color: '#cbd5e1',
+                                                            padding: '0.4rem',
+                                                            borderRadius: '6px',
+                                                            background: 'rgba(255,255,255,0.05)',
+                                                            border: '1px solid rgba(255,255,255,0.1)',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                        onMouseOver={(e) => e.target.style.background = '#FF3366'}
+                                                        onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                                    >
+                                                        {formatTime(show.startTime)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="movie-footer">
-                                <button className="book-btn" onClick={() => navigate(`/book/${show.showId}`)} style={{width: '100%'}}>
-                                    Select Seats
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                ))
             ) : (
                 <div className="empty-state">
-                    <span className="empty-icon">📅</span>
-                    <p>No shows scheduled for this movie.</p>
-                    <p className="sub-text">Please check back later or select another movie.</p>
+                    <p>No shows scheduled.</p>
                 </div>
             )}
         </div>
