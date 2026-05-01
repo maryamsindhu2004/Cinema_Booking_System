@@ -1,20 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #bb86fc;
-  --bg-dark: #050505;
-  --bg-card: #121212;
+  --primary: #a855f7;
+  --bg-dark: #000000;
+  --bg-card: rgba(25, 25, 25, 0.8);
   --text-main: #ffffff;
-  --text-muted: #b0b0b0;
-  --success: #03dac6;
-  --error: #cf6679;
+  --text-muted: #9ca3af;
+  --success: #10b981;
+  --error: #ef4444;
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Outfit', sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-main);
+  background-image: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #000 60%);
 }
 
 .App {
@@ -25,40 +26,25 @@ body {
 
 /* ─── Header ─────────────────────────────── */
 .hero-section {
-  padding: 1.25rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(5,5,5,0.95);
-  backdrop-filter: blur(12px);
+  padding: 1rem 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-  gap: 1rem;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-icon {
-  font-size: 1.9rem;
-  line-height: 1;
-}
-
 .title {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 800;
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(to right, #fff, #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .highlight {

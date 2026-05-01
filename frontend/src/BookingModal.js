@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 
 const S = {
   overlay: { position:'fixed', inset:0, background:'rgba(0,0,0,0.92)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 },
-  modal: { background:'#0a0a0a', borderRadius:16, width:'100%', maxWidth:680, maxHeight:'92vh', overflowY:'auto', padding:28, border:'1px solid #2a2a4a' },
+  modal: { background:'#0a0a0a', borderRadius:24, width:'100%', maxWidth:680, maxHeight:'92vh', overflowY:'auto', padding:32, border:'1px solid rgba(255,255,255,0.05)', boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.25)' },
   hdr: { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 },
-  card: { background:'#121212', border:'1px solid #1e1e30', borderRadius:10, padding:'14px 18px', marginBottom:10, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center' },
-  cardHover: { border:'1px solid #bb86fc' },
-  btn: (c='#bb86fc') => ({ background:c, color:'#000', border:'none', padding:'10px 22px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14 }),
-  input: { padding:'10px 14px', background:'#050505', border:'1px solid #333', borderRadius:8, color:'#fff', fontSize:14, width:'100%', boxSizing:'border-box' },
-  sub: { color:'#888', fontSize:13 },
+  card: { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'14px 18px', marginBottom:10, cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition: 'all 0.2s' },
+  cardHover: { border:'1px solid #a855f7' },
+  btn: (c='#a855f7') => ({ background:c, color:'#fff', border:'none', padding:'10px 22px', borderRadius:10, cursor:'pointer', fontWeight:700, fontSize:14, boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)' }),
+  input: { padding:'12px 16px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, color:'#fff', fontSize:14, width:'100%', boxSizing:'border-box', outline: 'none' },
+  sub: { color:'#949494', fontSize:13 },
   err: { color:'#ff5252', fontSize:13, marginTop:8 },
-  ok: { color:'#bb86fc', fontSize:13, marginTop:8 },
-  sep: { borderTop:'1px solid #1e1e30', paddingTop:16, marginTop:16 },
+  ok: { color:'#a855f7', fontSize:13, marginTop:8 },
+  sep: { borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:16, marginTop:16 },
   row: { display:'flex', justifyContent:'space-between', alignItems:'center' },
   tag: c => ({ color:c, fontSize:12, marginRight:12 }),
-  seat: c => ({ width:32, height:28, borderRadius:4, background:c, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#fff', fontWeight:700, cursor:'pointer', flexShrink:0 }),
-  stepDot: a => ({ width:24, height:24, borderRadius:'50%', background:a?'#bb86fc':'#1e1e30', display:'flex', alignItems:'center', justifyContent:'center', color:a?'#000':'#555', fontSize:11, fontWeight:700 }),
+  seat: c => ({ width:32, height:28, borderRadius:6, background:c, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#fff', fontWeight:700, cursor:'pointer', flexShrink:0, transition: 'all 0.2s' }),
+  stepDot: a => ({ width:24, height:24, borderRadius:'50%', background:a?'#a855f7':'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', color:a?'#fff':'#555', fontSize:11, fontWeight:700 }),
 };
 
 const STEPS = ['Screen','Date','Timing','Seats','More?','Food','Confirm','Done'];
@@ -128,12 +128,12 @@ export default function BookingModal({ movie, user, onClose }) {
         </div>
 
         {/* Step Bar */}
-        <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:20,padding:'10px 14px',background:'#0f0f23',borderRadius:8,flexWrap:'wrap'}}>
+        <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:20,padding:'10px 14px',background:'rgba(255,255,255,0.03)',borderRadius:10,flexWrap:'wrap'}}>
           {STEPS.map((lbl,i) => (
             <React.Fragment key={i}>
               <div style={{display:'flex',alignItems:'center',gap:4}}>
                 <div style={S.stepDot(step>=i+1)}>{step>i+1?'✓':i+1}</div>
-                <span style={{color:step===i+1?'#e94560':'#555',fontSize:11}}>{lbl}</span>
+                <span style={{color:step===i+1?'#a855f7':'#555',fontSize:11}}>{lbl}</span>
               </div>
               {i<7 && <span style={{color:'#333',fontSize:10}}>›</span>}
             </React.Fragment>
@@ -143,7 +143,7 @@ export default function BookingModal({ movie, user, onClose }) {
         {/* STEP 1 — Select Screen */}
         {step===1 && (
           <div>
-            <h3 style={{color:'#e94560',marginBottom:12}}>Select a Screen</h3>
+            <h3 style={{color:'#a855f7',marginBottom:12}}>Select a Screen</h3>
             {screens.length===0 ? <p style={S.sub}>No screens available.</p> : screens.map(sc=>(
               <div key={sc.screenId} style={S.card} onClick={()=>pickScreen(sc)}>
                 <div>
@@ -151,7 +151,7 @@ export default function BookingModal({ movie, user, onClose }) {
                   <div style={S.sub}>{sc.CinemaLocation}</div>
                 </div>
                 <div style={{textAlign:'right'}}>
-                  <div style={{color:'#e94560',fontWeight:700}}>{sc.ScreenType}</div>
+                  <div style={{color:'#a855f7',fontWeight:700}}>{sc.ScreenType}</div>
                   <div style={{color:'#4CAF50',fontSize:12}}>Rs. {sc.ScreenPrice} • {sc.totalSeats} seats</div>
                 </div>
               </div>
@@ -162,14 +162,14 @@ export default function BookingModal({ movie, user, onClose }) {
         {/* STEP 2 — Select Date */}
         {step===2 && (
           <div>
-            <button onClick={()=>setStep(1)} style={{background:'none',border:'none',color:'#e94560',cursor:'pointer',marginBottom:12}}>← Back</button>
-            <h3 style={{color:'#e94560',marginBottom:4}}>Select a Date</h3>
+            <button onClick={()=>setStep(1)} style={{background:'none',border:'none',color:'#a855f7',cursor:'pointer',marginBottom:12}}>← Back</button>
+            <h3 style={{color:'#a855f7',marginBottom:4}}>Select a Date</h3>
             <p style={S.sub}>{selScreen?.CinemaName} — {selScreen?.ScreenType}</p>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginTop:12}}>
               {dates.length === 0 ? <p style={S.sub}>No upcoming dates for this screen.</p> : dates.map(dt=>(
                 <div key={dt.showDate} onClick={()=>pickDate(dt)} style={{...S.card, flexDirection:'column', alignItems:'center', position:'relative', minHeight:80, textAlign:'center'}}>
                   {isTuesday(dt.showDate) && <span style={{position:'absolute',top:4,right:4,background:'#f0c040',color:'#111',fontSize:9,fontWeight:700,borderRadius:4,padding:'2px 4px'}}>10% OFF</span>}
-                  <div style={{color:'#e94560',fontWeight:700,fontSize:15}}>{dt.dayName}</div>
+                  <div style={{color:'#a855f7',fontWeight:700,fontSize:15}}>{dt.dayName}</div>
                   <div style={{color:'#fff', fontSize:14}}>{dt.showDate}</div>
                 </div>
               ))}
@@ -180,12 +180,12 @@ export default function BookingModal({ movie, user, onClose }) {
         {/* STEP 3 — Select Timing */}
         {step===3 && (
           <div>
-            <button onClick={()=>setStep(2)} style={{background:'none',border:'none',color:'#e94560',cursor:'pointer',marginBottom:12}}>← Back</button>
-            <h3 style={{color:'#e94560',marginBottom:4}}>Select a Timing</h3>
+            <button onClick={()=>setStep(2)} style={{background:'none',border:'none',color:'#a855f7',cursor:'pointer',marginBottom:12}}>← Back</button>
+            <h3 style={{color:'#a855f7',marginBottom:4}}>Select a Timing</h3>
             <p style={S.sub}>{selDate?.dayName} — {selDate?.showDate}</p>
             {timings.map(t=>(
               <div key={t.showId} style={S.card} onClick={()=>pickTiming(t)}>
-                <div style={{color:'#e94560',fontWeight:700,fontSize:20}}>{t.startTime} – {t.endTime}</div>
+                <div style={{color:'#a855f7',fontWeight:700,fontSize:20}}>{t.startTime} – {t.endTime}</div>
                 <div style={{color:'#4CAF50',fontSize:13}}>{t.AvailableSeats} seats available</div>
               </div>
             ))}
@@ -195,7 +195,7 @@ export default function BookingModal({ movie, user, onClose }) {
         {/* STEP 4 — Select Seats */}
         {step===4 && (
           <div>
-            <button onClick={()=>setStep(3)} style={{background:'none',border:'none',color:'#e94560',cursor:'pointer',marginBottom:8}}>← Back</button>
+            <button onClick={()=>setStep(3)} style={{background:'none',border:'none',color:'#a855f7',cursor:'pointer',marginBottom:8}}>← Back</button>
             <p style={{...S.sub,textAlign:'center'}}>{selScreen?.ScreenType} • {selDate?.showDate} • {selShow?.startTime}–{selShow?.endTime}</p>
             
             {/* Seat Legend */}
@@ -206,7 +206,7 @@ export default function BookingModal({ movie, user, onClose }) {
               <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:12,height:12,background:'#f0c040',borderRadius:2}}></div> Selected</div>
             </div>
 
-            <div style={{background:'#e94560',textAlign:'center',borderRadius:4,padding:5,color:'#fff',fontSize:12,marginBottom:14,letterSpacing:4}}>── SCREEN ──</div>
+            <div style={{background:'#a855f7',textAlign:'center',borderRadius:4,padding:5,color:'#fff',fontSize:12,marginBottom:14,letterSpacing:4}}>── SCREEN ──</div>
             
             {Object.entries(seatsByRow).map(([row,rowSeats])=>(
               <div key={row} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
@@ -262,7 +262,7 @@ export default function BookingModal({ movie, user, onClose }) {
         {/* STEP 6 — Food Order */}
         {step===6 && (
           <div>
-            <h3 style={{color:'#e94560',marginBottom:4}}>Order Food & Drinks</h3>
+            <h3 style={{color:'#a855f7',marginBottom:4}}>Order Food & Drinks</h3>
             <p style={S.sub}>Optional — add items to enjoy during the show</p>
             {menu.length===0 ? <p style={S.sub}>Loading menu…</p> : (
               ['Snacks','Beverages','Food','Dessert'].map(cat=>{
@@ -275,7 +275,7 @@ export default function BookingModal({ movie, user, onClose }) {
                       <div key={item.itemId} style={{...S.card,padding:'10px 14px'}}>
                         <div>
                           <div style={{color:'#fff'}}>{item.itemName}</div>
-                          <div style={{color:'#e94560',fontSize:13}}>Rs. {item.basePrice}</div>
+                          <div style={{color:'#a855f7',fontSize:13}}>Rs. {item.basePrice}</div>
                         </div>
                         <div style={{display:'flex',alignItems:'center',gap:10}}>
                           <button onClick={()=>setQty(item.itemId,-1)} style={{...S.btn('#333'),padding:'4px 10px'}}>−</button>
@@ -298,7 +298,7 @@ export default function BookingModal({ movie, user, onClose }) {
         {/* STEP 7 — Confirm Booking */}
         {step===7 && (
           <div>
-            <h3 style={{color:'#e94560',marginBottom:12}}>Confirm Your Booking</h3>
+            <h3 style={{color:'#a855f7',marginBottom:12}}>Confirm Your Booking</h3>
             <div style={{background:'#0f0f23',borderRadius:10,padding:16,marginBottom:16}}>
               <div style={S.row}><span style={S.sub}>Movie</span><span style={{color:'#fff'}}>{movie.title}</span></div>
               <div style={{...S.row,marginTop:8}}><span style={S.sub}>Cinema</span><span style={{color:'#fff'}}>{selScreen?.CinemaName}</span></div>
@@ -309,7 +309,7 @@ export default function BookingModal({ movie, user, onClose }) {
                 <div style={S.row}><span style={S.sub}>Ticket Price</span><span style={{color:'#fff'}}>Rs. {(seatTotal+screenPrice).toFixed(2)}</span></div>
                 {foodTotal>0 && <div style={{...S.row,marginTop:4}}><span style={S.sub}>Food</span><span style={{color:'#fff'}}>Rs. {foodTotal.toFixed(2)}</span></div>}
                 {tuesdayDiscount>0 && <div style={{...S.row,marginTop:4}}><span style={{color:'#f0c040'}}>Tuesday Discount (10%)</span><span style={{color:'#f0c040'}}>− Rs. {tuesdayDiscount.toFixed(2)}</span></div>}
-                <div style={{...S.row,marginTop:8}}><span style={{color:'#fff',fontWeight:700}}>Total</span><span style={{color:'#e94560',fontWeight:700,fontSize:20}}>Rs. {grandTotal}</span></div>
+                <div style={{...S.row,marginTop:8}}><span style={{color:'#fff',fontWeight:700}}>Total</span><span style={{color:'#a855f7',fontWeight:700,fontSize:20}}>Rs. {grandTotal}</span></div>
               </div>
             </div>
             <div style={{marginBottom:14}}>
@@ -332,7 +332,7 @@ export default function BookingModal({ movie, user, onClose }) {
             <div style={{fontSize:60}}>🎉</div>
             <h3 style={{color:'#4CAF50',margin:'16px 0 8px'}}>Booking Confirmed!</h3>
             <p style={S.sub}>Booking ID: #{bookingId}</p>
-            <p style={{color:'#e94560',fontWeight:700,fontSize:18,margin:'8px 0'}}>Total Paid: Rs. {grandTotal}</p>
+            <p style={{color:'#a855f7',fontWeight:700,fontSize:18,margin:'8px 0'}}>Total Paid: Rs. {grandTotal}</p>
             {tuesdayDiscount>0 && <p style={{color:'#f0c040',fontSize:13}}>🎊 Tuesday discount applied — You saved Rs. {tuesdayDiscount.toFixed(2)}!</p>}
             <div style={{...S.sep,marginTop:24}}>
               <p style={{color:'#fff',marginBottom:12}}>Rate your experience:</p>

@@ -6,12 +6,12 @@ import BookingModal from './BookingModal';
 import './App.css';
 
 const S = {
-  btn: (c='#e94560') => ({ background:c, color:'#fff', border:'none', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14 }),
-  input: { padding:'10px 14px', background:'#1a1a2e', border:'1px solid #444', borderRadius:8, color:'#fff', fontSize:14 },
-  overlay: { position:'fixed', inset:0, background:'rgba(0,0,0,0.88)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 },
-  modal: { background:'#1a1a2e', borderRadius:16, width:'100%', maxWidth:680, maxHeight:'90vh', overflowY:'auto', padding:28, border:'1px solid #2a2a4a' },
-  card: { background:'#0f0f23', border:'1px solid #2a2a4a', borderRadius:10, padding:'14px 18px', marginBottom:10 },
-  sub: { color:'#aaa', fontSize:13 },
+  btn: (c='#a855f7') => ({ background:c, color:'#fff', border:'none', padding:'10px 20px', borderRadius:10, cursor:'pointer', fontWeight:700, fontSize:14, transition: 'all 0.3s', boxShadow: '0 4px 15px rgba(168, 85, 247, 0.2)' }),
+  input: { padding:'12px 16px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, color:'#fff', fontSize:14, outline: 'none' },
+  overlay: { position:'fixed', inset:0, background:'rgba(0,0,0,0.94)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 },
+  modal: { background:'#0a0a0a', borderRadius:24, width:'100%', maxWidth:680, maxHeight:'90vh', overflowY:'auto', padding:32, border:'1px solid rgba(255,255,255,0.05)', boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.2)' },
+  card: { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'14px 18px', marginBottom:10 },
+  sub: { color:'#949494', fontSize:13 },
   row: { display:'flex', justifyContent:'space-between', alignItems:'center' },
 };
 
@@ -47,7 +47,7 @@ function BookingHistory({ user, onClose }) {
     }
   };
 
-  const statusColor = s => ({ Paid:'#4CAF50', Pending:'#f0c040', Refunded:'#aaa', Failed:'#e94560' }[s]||'#aaa');
+  const statusColor = s => ({ Paid:'#4CAF50', Pending:'#f0c040', Refunded:'#aaa', Failed:'#a855f7' }[s]||'#aaa');
 
   return (
     <div style={S.overlay} onClick={e=>e.target===e.currentTarget&&onClose()}>
@@ -56,7 +56,7 @@ function BookingHistory({ user, onClose }) {
           <h2 style={{color:'#fff',margin:0}}>📋 My Bookings</h2>
           <button onClick={onClose} style={{background:'none',border:'none',color:'#aaa',fontSize:24,cursor:'pointer'}}>✕</button>
         </div>
-        {msg && <p style={{color:msg.startsWith('✅')?'#4CAF50':'#e94560',fontSize:13,marginBottom:12}}>{msg}</p>}
+        {msg && <p style={{color:msg.startsWith('✅')?'#4CAF50':'#a855f7',fontSize:13,marginBottom:12}}>{msg}</p>}
         {loading ? <p style={S.sub}>Loading…</p>
           : bookings.length===0 ? <p style={S.sub}>No bookings yet. Book your first movie!</p>
           : bookings.map(b=>(
@@ -69,7 +69,7 @@ function BookingHistory({ user, onClose }) {
               <div style={S.sub}>{b.showDate} at {String(b.startTime).slice(0,5)} • {b.SeatCount} seat(s)</div>
               <div style={S.row}>
                 <span style={{...S.sub}}>Booking #{b.bookingId}</span>
-                <span style={{color:'#e94560',fontWeight:700}}>Rs. {b.totalAmount}</span>
+                <span style={{color:'#a855f7',fontWeight:700}}>Rs. {b.totalAmount}</span>
               </div>
               {b.paymentStatus !== 'Refunded' && (
                 <button onClick={()=>cancel(b.bookingId)} style={{...S.btn('#2a2a4a'),padding:'6px 14px',fontSize:12,alignSelf:'flex-start',marginTop:4}}>
@@ -125,7 +125,7 @@ function Home({ user, onLogout }) {
                 <span className="indicator"></span>DB {dbStatus.success?'Connected':'Offline'}
               </div>
             )}
-            <button onClick={()=>setShowHistory(true)} style={{...S.btn('#0f0f23'),border:'1px solid #e94560',padding:'8px 16px',marginRight:8}}>
+            <button onClick={()=>setShowHistory(true)} style={{...S.btn('transparent'),border:'1px solid rgba(168, 85, 247, 0.5)',padding:'8px 16px',marginRight:8, color: '#a855f7'}}>
               📋 My Bookings
             </button>
             <div className="user-pill">
@@ -165,7 +165,7 @@ function Home({ user, onLogout }) {
                   <div className="movie-info">
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                       <h3>{movie.title}</h3>
-                      <span className="rating-badge" style={{background:'var(--primary)',padding:'2px 8px',borderRadius:6,fontSize:12,fontWeight:700}}>{movie.rating}</span>
+                      <span className="rating-badge" style={{background:'#a855f7',padding:'2px 8px',borderRadius:6,fontSize:12,fontWeight:700}}>{movie.rating}</span>
                     </div>
                     <p className="movie-meta">{movie.language} • {movie.duration} mins</p>
                     <p className="movie-desc">{movie.description?.substring(0, 100)}...</p>

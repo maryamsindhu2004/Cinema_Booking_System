@@ -1,24 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
-  --primary: #bb86fc; /* Vibrant Purple */
-  --primary-dark: #9965f4;
-  --secondary: #03dac6;
-  --bg-deep: #050505;
-  --bg-card: #121212;
+  --primary: #a855f7;        /* Neon Purple */
+  --primary-glow: rgba(168, 85, 247, 0.4);
+  --bg-pitch: #000000;       /* Perfect Black */
+  --bg-card: rgba(20, 20, 20, 0.8);
+  --bg-surface: #0a0a0a;
   --text-main: #ffffff;
-  --text-dim: #b0b0b0;
-  --accent-purple: #3700b3;
-  --glass: rgba(255, 255, 255, 0.03);
+  --text-dim: #949494;
+  --border: rgba(255, 255, 255, 0.08);
+  --glass: rgba(10, 10, 10, 0.6);
+  --shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', 'Inter', sans-serif; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
 
 body {
-  background-color: var(--bg-deep);
+  background-color: var(--bg-pitch);
   color: var(--text-main);
   line-height: 1.6;
-  overflow-x: hidden;
+  background-image: radial-gradient(circle at 50% -20%, #1a0b2e 0%, #000 60%);
+  min-height: 100vh;
 }
 
 /* App Container */
@@ -114,41 +116,43 @@ body {
 }
 
 .movie-card {
-  background: #0f0f1e;
-  border-radius: 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
   overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid #1e1e30;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 1px solid var(--border);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .movie-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
   border-color: var(--primary);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 15px 40px var(--primary-glow);
 }
 
-.movie-info h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+.book-btn {
+  background: var(--primary);
   color: #fff;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px var(--primary-glow);
 }
 
-.movie-meta {
-  color: var(--primary);
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.movie-desc {
-  color: #888;
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
+.book-btn:hover {
+  background: #fff;
+  color: #000;
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(255,255,255,0.3);
 }
 
 /* Dashboard Styling */
