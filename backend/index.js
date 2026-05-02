@@ -303,10 +303,10 @@ app.get('/api/user/:userId', async (req, res) => {
         const pool = await getConnection();
         const result = await pool.request()
             .input('uid', req.params.userId)
-            .query('SELECT id, name, email, phoneNo, loyaltyPoints FROM Users WHERE id = @uid');
+            .query('SELECT id, name, email, phoneNo, loyaltyPoints, isAdmin FROM Users WHERE id = @uid');
         
         if (result.recordset.length > 0) {
-            console.log(`👤 [USER] Syncing data for ${result.recordset[0].name}: ${result.recordset[0].loyaltyPoints} pts`);
+            console.log(`👤 [USER] Syncing data for ${result.recordset[0].name}: ${result.recordset[0].loyaltyPoints} pts (Admin: ${result.recordset[0].isAdmin})`);
             res.json({ success: true, data: result.recordset[0] });
         } else {
             res.status(404).json({ success: false, error: 'User not found' });
@@ -467,13 +467,94 @@ app.post('/api/feedback', async (req, res) => {
     }
 });
 
+// --- ADMIN ROUTES ---
+
+// GET /api/admin/feedback - Fetch all feedback with user names
+app.get('/api/admin/feedback', async (req, res) => {
+    try {
+        const pool = await getConnection();
+        const result = await pool.request().query(`
+            SELECT f.*, u.name as userName, u.email as userEmail 
+            FROM Feedback f 
+            JOIN Users u ON f.userId = u.id 
+            ORDER BY f.submitted_at DESC
+        `);
+        res.json({ success: true, data: result.recordset });
+    } catch (error) {
+        console.error('❌ Admin Feedback Load Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /api/admin/feedback/:id/respond - Respond to feedback
+app.post('/api/admin/feedback/:id/respond', async (req, res) => {
+    const { response } = req.body;
+    const feedbackId = req.params.id;
+
+    if (!response) {
+        return res.status(400).json({ success: false, error: 'Response content is required' });
+    }
+
+    try {
+        const pool = await getConnection();
+        await pool.request()
+            .input('fid', feedbackId)
+            .input('res', response)
+            .query('UPDATE Feedback SET adminResponse = @res, respondedAt = GETDATE() WHERE feedbackId = @fid');
+        
+        console.log(`💬 [ADMIN] Responded to Feedback ID: ${feedbackId}`);
+        res.json({ success: true, message: 'Response submitted successfully!' });
+    } catch (error) {
+        console.error('❌ Admin Respond Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /api/admin/revenue - Fetch monthly revenue breakdown
+app.get('/api/admin/revenue', async (req, res) => {
+    try {
+        const pool = await getConnection();
+        const result = await pool.request().query(`
+            WITH BookingTotals AS (
+                SELECT 
+                    b.bookingId,
+                    b.bookingDate,
+                    ISNULL((SELECT SUM(st.priceSeat) FROM BookingSeat bs JOIN Seat se ON bs.seatId = se.seatId JOIN SeatType st ON se.seatTypeId = st.seatTypeId WHERE bs.bookingId = b.bookingId), 0) as ticketRev,
+                    ISNULL((SELECT SUM(i.basePrice * fod.quantity) FROM FoodOrder fo JOIN FoodOrderDetail fod ON fo.foodOrderId = fod.foodOrderId JOIN Item i ON fod.itemId = i.itemId WHERE fo.bookingId = b.bookingId), 0) as foodRev
+                FROM Booking b
+                WHERE b.bookingStatus = 1
+            )
+            SELECT 
+                CAST(YEAR(bookingDate) AS VARCHAR) + '-' + RIGHT('0' + CAST(MONTH(bookingDate) AS VARCHAR), 2) as month,
+                COUNT(bookingId) as totalBookings,
+                SUM(ticketRev + foodRev) as totalRevenue,
+                SUM(foodRev) as foodRevenue,
+                SUM(ticketRev) as ticketRevenue
+            FROM BookingTotals
+            GROUP BY YEAR(bookingDate), MONTH(bookingDate)
+            ORDER BY month DESC
+        `);
+        
+        console.log(`💰 [ADMIN] Revenue data loaded: ${result.recordset.length} months`);
+        res.json({ success: true, data: result.recordset });
+    } catch (error) {
+        console.error('❌ Admin Revenue Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+
+
+
+
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) return res.status(404).json({ error: 'No API' });
     res.sendFile(path.join(pub, 'index.html'));
 });
 
 app.listen(PORT, '127.0.0.1', async () => {
-    console.log(`🎭 Backend on http://127.0.0.1:${PORT}`);
+    console.log(`🎭 THEATRO Backend on http://127.0.0.1:${PORT}`);
     await initDb();
     setInterval(() => console.log(`💓 [${new Date().toLocaleTimeString()}] Heartbeat: Backend is Alive`), 10000);
 });

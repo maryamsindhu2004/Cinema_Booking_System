@@ -1022,3 +1022,14 @@ LEFT JOIN ShowTable sh ON m.movieId = sh.movieId
 WHERE m.movieId >= 54
 GROUP BY m.title, m.language
 ORDER BY m.language;
+
+-- 18. Feedback Table
+CREATE TABLE Feedback (
+    feedbackId INT PRIMARY KEY IDENTITY(1,1),
+    userId INT NOT NULL,
+    rating INT CHECK (rating >= 1 AND rating <= 5),
+    comments NVARCHAR(MAX),
+    submitted_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
+);
+select* from Feedback
