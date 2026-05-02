@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import useFlowGuard from "../hooks/useFlowGuard";
+import Layout from "../components/Layout";
 
 const API = "http://localhost:3000";
 
@@ -9,8 +10,8 @@ export default function Step3Seats() {
     const { booking, updateBooking } = useBooking();
     const navigate = useNavigate();
 
-    const [seatsData, setSeatsData] = useState([]); // [{seat_id, seat_no, row_no}]
-    const [bookedSeats, setBookedSeats] = useState([]); // [seat_id]
+    const [seatsData, setSeatsData] = useState([]); 
+    const [bookedSeats, setBookedSeats] = useState([]); 
     const [selectedSeats, setSelectedSeats] = useState(booking.seats || []);
 
     useFlowGuard(["movieId", "showtimeId"]);
@@ -27,7 +28,6 @@ export default function Step3Seats() {
             .catch(err => console.error("Failed to fetch seats", err));
     }, [booking.showtimeId]);
 
-    // Group seats by row for rendering
     const rows = seatsData.reduce((acc, seat) => {
         const row = seat.row_no || "Other";
         if (!acc[row]) acc[row] = [];
@@ -35,7 +35,6 @@ export default function Step3Seats() {
         return acc;
     }, {});
 
-    // Sort rows alphabetically
     const rowKeys = Object.keys(rows).sort();
 
     function toggleSeat(seatId) {
@@ -54,44 +53,77 @@ export default function Step3Seats() {
     }
 
     return (
-        <div style={{ padding: 20, textAlign: "center" }}>
-            <h2>Step 3: Select Your Seats</h2>
+        <Layout currentStep={3} title="Select Your Seats">
+            <div className="info-box">
+                <strong>ℹ️ Choose your favorite spot</strong> from the layout below.
+            </div>
 
-            <div style={screenLabel}>SCREEN THIS WAY</div>
+            <div style={{
+                background: "linear-gradient(to bottom, #ccc, transparent)",
+                height: "40px",
+                borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.8em",
+                fontWeight: "bold",
+                color: "#666",
+                marginBottom: "40px",
+                borderTop: "3px solid #667eea"
+            }}>
+                SCREEN THIS WAY
+            </div>
 
             {/* LEGEND */}
-            <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", gap: 15 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ ...legendBox, backgroundColor: "#ccc" }}></div> Available
+            <div style={{ marginBottom: "30px", display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9em" }}>
+                    <div style={{ width: "20px", height: "20px", borderRadius: "4px", backgroundColor: "#e9ecef", border: "1px solid #ddd" }}></div> Available
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ ...legendBox, backgroundColor: "#e74c3c" }}></div> Booked
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9em" }}>
+                    <div style={{ width: "20px", height: "20px", borderRadius: "4px", backgroundColor: "#dc3545" }}></div> Booked
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ ...legendBox, backgroundColor: "#f1c40f" }}></div> Selected
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9em" }}>
+                    <div style={{ width: "20px", height: "20px", borderRadius: "4px", backgroundColor: "#667eea" }}></div> Selected
                 </div>
             </div>
 
             {/* SEAT GRID */}
-            <div style={{ overflowX: "auto", paddingBottom: 20 }}>
+            <div style={{ overflowX: "auto", paddingBottom: "20px", textAlign: "center" }}>
                 {rowKeys.map(rowKey => (
-                    <div key={rowKey} style={{ display: "flex", justifyContent: "center", marginBottom: 8, minWidth: "max-content" }}>
-                        <div style={rowLabel}>{rowKey}</div>
+                    <div key={rowKey} style={{ display: "flex", justifyContent: "center", marginBottom: "8px", minWidth: "max-content" }}>
+                        <div style={{ width: "30px", fontWeight: "bold", display: "flex", alignItems: "center", color: "#666" }}>{rowKey}</div>
                         {rows[rowKey].sort((a,b) => a.seat_no.localeCompare(b.seat_no, undefined, {numeric: true})).map(seat => {
                             const isBooked = bookedSeats.includes(seat.seat_id);
                             const isSelected = selectedSeats.includes(seat.seat_id);
 
-                            let bg = "#ccc";
-                            if (isBooked) bg = "#e74c3c";
-                            else if (isSelected) bg = "#f1c40f";
+                            let bg = "#e9ecef";
+                            let color = "#333";
+                            if (isBooked) {
+                                bg = "#dc3545";
+                                color = "white";
+                            } else if (isSelected) {
+                                bg = "#667eea";
+                                color = "white";
+                            }
 
                             return (
                                 <div
                                     key={seat.seat_id}
                                     onClick={() => toggleSeat(seat.seat_id)}
                                     style={{
-                                        ...seatBox,
+                                        width: "35px",
+                                        height: "35px",
+                                        margin: "3px",
+                                        borderRadius: "6px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "10px",
+                                        userSelect: "none",
+                                        transition: "0.2s",
                                         backgroundColor: bg,
+                                        color: color,
+                                        border: isSelected ? "none" : "1px solid #ddd",
                                         cursor: isBooked ? "not-allowed" : "pointer"
                                     }}
                                 >
@@ -103,65 +135,27 @@ export default function Step3Seats() {
                 ))}
             </div>
 
-            {/* BUTTONS */}
-            <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 10 }}>
-                <button onClick={() => navigate("/step2")} style={secondaryBtn}>Back</button>
+            {selectedSeats.length > 0 && (
+                <div className="summary" style={{ padding: "15px", marginTop: "20px" }}>
+                    <div className="summary-item" style={{ border: "none", padding: 0 }}>
+                        <span className="summary-label">Selected Seats:</span>
+                        <span className="summary-value" style={{ color: "#667eea" }}>
+                            {selectedSeats.length} Seats
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            <div className="button-group">
+                <button className="btn-secondary" onClick={() => navigate("/step2")}>← Back</button>
                 <button
+                    className="btn-primary"
                     onClick={next}
                     disabled={selectedSeats.length === 0}
-                    style={{
-                        ...primaryBtn,
-                        background: selectedSeats.length ? "black" : "gray",
-                        cursor: selectedSeats.length ? "pointer" : "not-allowed"
-                    }}
                 >
-                    Continue ({selectedSeats.length})
+                    Continue to Food ({selectedSeats.length}) →
                 </button>
             </div>
-        </div>
+        </Layout>
     );
 }
-
-const screenLabel = {
-    margin: "20px auto",
-    width: "80%",
-    padding: "10px",
-    background: "#ddd",
-    borderRadius: 10,
-    fontWeight: "bold"
-};
-
-const legendBox = { width: 20, height: 20, borderRadius: 4 };
-
-const rowLabel = { width: 30, fontWeight: "bold", display: "flex", alignItems: "center" };
-
-const seatBox = {
-    width: 35,
-    height: 35,
-    margin: 3,
-    borderRadius: 6,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 10,
-    userSelect: "none",
-    transition: "0.2s"
-};
-
-const primaryBtn = {
-    padding: "10px 20px",
-    background: "black",
-    color: "white",
-    border: "none",
-    borderRadius: 5,
-    cursor: "pointer"
-};
-
-const secondaryBtn = {
-    padding: "10px 20px",
-    background: "white",
-    color: "black",
-    border: "1px solid black",
-    borderRadius: 5,
-    cursor: "pointer"
-};

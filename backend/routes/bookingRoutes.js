@@ -175,16 +175,26 @@ router.get("/:id/full", async (req, res) => {
         `);
 
         // TOTAL
-        const totalResult = await pool.request().query(`
-            SELECT dbo.fn_TotalBookingAmount(${id}) AS total
-        `);
+        let total = 0;
+        try {
+            const totalResult = await pool.request().query(`
+                SELECT dbo.fn_TotalBookingAmount(${id}) AS total
+            `);
+            total = totalResult.recordset[0].total;
+        } catch (totalErr) {
+            console.warn("Could not calculate total via DB function, using fallback:", totalErr.message);
+            // Fallback calculation: 500 per seat + food items
+            const seatCost = seatsResult.recordset.length * 500;
+            const foodCost = foodResult.recordset.reduce((sum, f) => sum + (f.price * f.quantity), 0);
+            total = seatCost + foodCost;
+        }
 
         res.json({
             success: true,
             booking,
             seats: seatsResult.recordset,
             food: foodResult.recordset,
-            total: totalResult.recordset[0].total
+            total: total
         });
 
     } catch (err) {

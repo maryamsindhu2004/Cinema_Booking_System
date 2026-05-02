@@ -2,6 +2,7 @@ import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import useFlowGuard from "../hooks/useFlowGuard";
 import { useState } from "react";
+import Layout from "../components/Layout";
 
 export default function Step6Payment() {
     const { booking, clearBooking } = useBooking();
@@ -27,12 +28,8 @@ export default function Step6Payment() {
                 return;
             }
 
-            // store booking id for step 7
             localStorage.setItem("bookingId", data.booking_id);
-            
-            // Clear current booking state since it's finished
             clearBooking();
-
             navigate("/step7");
 
         } catch (err) {
@@ -43,53 +40,70 @@ export default function Step6Payment() {
         }
     }
 
-    return (
-        <div style={{ padding: 20, maxWidth: 600, margin: "auto" }}>
-            <h2>Step 6: Payment Summary</h2>
+    const foodItems = Object.values(booking.food || {});
 
-            <div style={summaryBox}>
-                <h3>Review Your Booking</h3>
-                <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>
-                    {JSON.stringify(booking, null, 2)}
-                </pre>
+    return (
+        <Layout currentStep={6} title="Payment Summary">
+            <div className="info-box">
+                <strong>ℹ️ Review your selection</strong> before proceeding to payment.
             </div>
 
-            <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-                <button onClick={() => navigate("/step5")} style={secondaryBtn}>Back</button>
+            <div className="summary">
+                <h3>Booking Details</h3>
+                <div className="summary-item">
+                    <span className="summary-label">Movie ID:</span>
+                    <span className="summary-value">{booking.movieId}</span>
+                </div>
+                <div className="summary-item">
+                    <span className="summary-label">Showtime ID:</span>
+                    <span className="summary-value">{booking.showtimeId}</span>
+                </div>
+                <div className="summary-item">
+                    <span className="summary-label">Seats:</span>
+                    <span className="summary-value">{booking.seats?.length} Selected</span>
+                </div>
+                
+                {foodItems.length > 0 && (
+                    <>
+                        <h3 style={{ marginTop: "20px" }}>Food & Beverages</h3>
+                        {foodItems.map(c => (
+                            <div key={c.item.item_id} className="summary-item">
+                                <span className="summary-label">{c.item.item_name} (x{c.qty})</span>
+                                <span className="summary-value">Rs. {c.qty * c.item.price}</span>
+                            </div>
+                        ))}
+                    </>
+                )}
+
+                <h3 style={{ marginTop: "20px" }}>Customer Info</h3>
+                <div className="summary-item">
+                    <span className="summary-label">Name:</span>
+                    <span className="summary-value">{booking.customer?.full_name}</span>
+                </div>
+                <div className="summary-item">
+                    <span className="summary-label">Email:</span>
+                    <span className="summary-value">{booking.customer?.email}</span>
+                </div>
+
+                <div className="summary-item summary-total">
+                    <span className="summary-label">Total Amount:</span>
+                    <span className="summary-value total-amount">
+                        Rs. {(booking.foodTotal || 0) + (booking.seats?.length * 500 || 0)}
+                    </span>
+                </div>
+            </div>
+
+            <div className="button-group">
+                <button className="btn-secondary" onClick={() => navigate("/step5")}>← Back</button>
                 <button
+                    className="btn-success"
                     onClick={confirm}
                     disabled={loading}
-                    style={primaryBtn}
+                    style={{ flex: 1 }}
                 >
-                    {loading ? "Processing..." : "Confirm & Pay"}
+                    {loading ? "Processing..." : "Confirm & Pay Now →"}
                 </button>
             </div>
-        </div>
+        </Layout>
     );
 }
-
-const summaryBox = {
-    padding: 15,
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    background: "#f9f9f9"
-};
-
-const primaryBtn = {
-    padding: "10px 20px",
-    background: "black",
-    color: "white",
-    border: "none",
-    borderRadius: 5,
-    cursor: "pointer",
-    flex: 1
-};
-
-const secondaryBtn = {
-    padding: "10px 20px",
-    background: "white",
-    color: "black",
-    border: "1px solid black",
-    borderRadius: 5,
-    cursor: "pointer"
-};

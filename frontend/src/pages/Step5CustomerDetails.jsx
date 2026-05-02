@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
 import useFlowGuard from "../hooks/useFlowGuard";
+import Layout from "../components/Layout";
 
 export default function Step5CustomerDetails() {
     const { booking, updateBooking } = useBooking();
@@ -13,7 +14,6 @@ export default function Step5CustomerDetails() {
         phone: ""
     });
 
-    // standardized guard
     useFlowGuard(["movieId", "showtimeId", "seats"]);
 
     function handleChange(e) {
@@ -24,7 +24,6 @@ export default function Step5CustomerDetails() {
     }
 
     function next() {
-        // basic validation
         if (!form.full_name || !form.email || !form.phone) {
             alert("Please fill all fields");
             return;
@@ -38,80 +37,65 @@ export default function Step5CustomerDetails() {
     }
 
     return (
-        <div style={{ padding: 20, maxWidth: 400, margin: "auto" }}>
-            <h2>Step 5: Customer Details</h2>
-
-            {/* NAME */}
-            <div style={{ marginBottom: 10 }}>
-                <label>Full Name</label>
-                <input
-                    name="full_name"
-                    value={form.full_name}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    placeholder="Enter full name"
-                />
+        <Layout currentStep={6} title="Contact Information">
+            <div className="info-box">
+                <strong>ℹ️ Almost there!</strong> Please provide your details for the booking.
             </div>
 
-            {/* EMAIL */}
-            <div style={{ marginBottom: 10 }}>
-                <label>Email</label>
-                <input
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    placeholder="Enter email"
-                />
-            </div>
+            <div style={{ maxWidth: "500px", margin: "0 auto" }}>
+                <div style={{ marginBottom: "20px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold", color: "#333" }}>Full Name</label>
+                    <input
+                        name="full_name"
+                        value={form.full_name}
+                        onChange={handleChange}
+                        style={inputStyle}
+                        placeholder="e.g. John Doe"
+                    />
+                </div>
 
-            {/* PHONE */}
-            <div style={{ marginBottom: 10 }}>
-                <label>Phone</label>
-                <input
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    placeholder="Enter phone number"
-                />
-            </div>
+                <div style={{ marginBottom: "20px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold", color: "#333" }}>Email Address</label>
+                    <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        style={inputStyle}
+                        placeholder="e.g. john@example.com"
+                    />
+                </div>
 
-            {/* NAVIGATION */}
-            <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-                <button onClick={() => navigate("/step4")} style={secondaryBtn}>Back</button>
-                <button onClick={next} style={primaryBtn}>
-                    Continue to Summary
-                </button>
+                <div style={{ marginBottom: "20px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold", color: "#333" }}>Phone Number</label>
+                    <input
+                        name="phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={handleChange}
+                        style={inputStyle}
+                        placeholder="e.g. +92 300 1234567"
+                    />
+                </div>
+
+                <div className="button-group" style={{ marginTop: "40px" }}>
+                    <button className="btn-secondary" onClick={() => navigate("/step4")}>← Back</button>
+                    <button className="btn-primary" onClick={next}>
+                        Continue to Summary →
+                    </button>
+                </div>
             </div>
-        </div>
+        </Layout>
     );
 }
 
 const inputStyle = {
     width: "100%",
-    padding: 10,
-    marginTop: 5,
-    border: "1px solid #ccc",
-    borderRadius: 5,
+    padding: "12px 15px",
+    border: "2px solid #ddd",
+    borderRadius: "8px",
+    fontSize: "1em",
+    outline: "none",
+    transition: "border-color 0.3s ease",
     boxSizing: "border-box"
-};
-
-const primaryBtn = {
-    padding: "10px 20px",
-    background: "black",
-    color: "white",
-    border: "none",
-    borderRadius: 5,
-    cursor: "pointer",
-    flex: 1
-};
-
-const secondaryBtn = {
-    padding: "10px 20px",
-    background: "white",
-    color: "black",
-    border: "1px solid black",
-    borderRadius: 5,
-    cursor: "pointer"
 };

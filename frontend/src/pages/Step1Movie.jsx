@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getMovies } from "../services/api";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
 
 export default function Step1Movie() {
     const [movies, setMovies] = useState([]);
@@ -20,53 +21,34 @@ export default function Step1Movie() {
     }
 
     return (
-        <div style={{ padding: 20 }}>
-            <h2>Step 1: Select Movie</h2>
+        <Layout currentStep={1} title="Now Showing">
+            <div className="info-box">
+                <strong>ℹ️ Select a movie</strong> from the options below to get started.
+            </div>
 
-            <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
+            <div className="grid">
                 {movies.map(m => (
                     <div
                         key={m.movie_id}
+                        className={`card ${selected === m.movie_id ? 'selected' : ''}`}
                         onClick={() => setSelected(m.movie_id)}
-                        style={{
-                            padding: 15,
-                            borderRadius: 8,
-                            cursor: "pointer",
-                            textAlign: "center",
-                            transition: "0.2s",
-                            border: selected === m.movie_id ? "3px solid #000" : "1px solid #ccc",
-                            backgroundColor: selected === m.movie_id ? "#f0f0f0" : "#fff"
-                        }}
                     >
-                        {m.title}
+                        <div className="card-icon">🎬</div>
+                        <div className="card-title">{m.title}</div>
+                        <div className="card-details">{m.genre || 'Action / Drama'}</div>
+                        <div className="card-details">{m.duration || '120'} min</div>
+                        <div className="card-details">🌐 {m.language || 'English'}</div>
+                        <div className="card-details">{m.rating || '⭐️ 4.5'}</div>
                     </div>
                 ))}
             </div>
 
-            <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-                <button onClick={() => navigate("/")} style={secondaryBtn}>Back to Home</button>
-                <button disabled={!selected} onClick={next} style={primaryBtn}>
-                    Continue to Showtimes
+            <div className="button-group">
+                <button className="btn-secondary" onClick={() => navigate("/")}>Back to Home</button>
+                <button className="btn-primary" disabled={!selected} onClick={next}>
+                    Continue to Showtimes →
                 </button>
             </div>
-        </div>
+        </Layout>
     );
 }
-
-const primaryBtn = {
-    padding: "10px 20px",
-    background: "black",
-    color: "white",
-    border: "none",
-    borderRadius: 5,
-    cursor: "pointer"
-};
-
-const secondaryBtn = {
-    padding: "10px 20px",
-    background: "white",
-    color: "black",
-    border: "1px solid black",
-    borderRadius: 5,
-    cursor: "pointer"
-};
