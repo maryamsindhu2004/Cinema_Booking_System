@@ -76,21 +76,22 @@ function MovieDetails() {
 
                         {Object.entries(dates).map(([dateStr, screens]) => (
                             <div key={dateStr} style={{
-                                background: 'rgba(30, 41, 59, 0.5)',
+                                background: 'var(--container-bg)',
                                 borderRadius: '12px',
-                                border: '1px solid rgba(255,255,255,0.1)',
+                                border: '1px solid var(--container-border)',
                                 overflow: 'hidden',
-                                marginBottom: '1rem'
+                                marginBottom: '1rem',
+                                boxShadow: 'var(--shadow)'
                             }}>
                                 <div style={{
-                                    background: 'rgba(255,255,255,0.05)',
+                                    background: 'rgba(0,0,0,0.05)',
                                     padding: '0.75rem',
                                     textAlign: 'left',
                                     paddingLeft: '1.5rem',
-                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                    borderBottom: '1px solid var(--container-border)',
                                     fontSize: '1rem',
                                     fontWeight: '700',
-                                    color: '#10b981'
+                                    color: 'var(--container-text)'
                                 }}>
                                     {dateStr}
                                 </div>
@@ -105,16 +106,16 @@ function MovieDetails() {
                                         }}>
                                             <div style={{
                                                 padding: '0.75rem',
-                                                background: 'rgba(255,255,255,0.02)',
+                                                background: 'rgba(0,0,0,0.02)',
                                                 textAlign: 'center',
-                                                borderBottom: '1px solid rgba(255,255,255,0.05)'
+                                                borderBottom: '1px solid rgba(0,0,0,0.05)'
                                             }}>
                                                 <h3 style={{
                                                     margin: 0, 
                                                     fontSize: '1rem', 
                                                     textTransform: 'uppercase', 
                                                     letterSpacing: '2px',
-                                                    color: '#fff'
+                                                    color: 'var(--container-text)'
                                                 }}>
                                                     {screenType} SCREEN
                                                 </h3>
@@ -125,8 +126,8 @@ function MovieDetails() {
                                                     gap: '1rem',
                                                     marginTop: '0.2rem'
                                                 }}>
-                                                    {screenData.hasWheelchair && <span title="Wheelchair Accessible" style={{fontSize: '0.9rem'}}>♿</span>}
-                                                    <span style={{fontSize: '0.85rem', color: '#10b981', fontWeight: '700'}}>Rs. {screenData.price}</span>
+                                                    {screenData.hasWheelchair && <span title="Wheelchair Accessible" style={{fontSize: '0.9rem', color: 'var(--container-text)'}}>♿</span>}
+                                                    <span style={{fontSize: '0.85rem', color: 'var(--container-accent)', fontWeight: '700'}}>Rs. {screenData.price}</span>
                                                 </div>
                                             </div>
 
@@ -137,16 +138,17 @@ function MovieDetails() {
                                                         onClick={() => navigate(`/book/${show.showId}`)}
                                                         style={{
                                                             fontSize: '0.85rem',
-                                                            color: '#cbd5e1',
+                                                            color: 'var(--container-text)',
                                                             padding: '0.4rem',
                                                             borderRadius: '6px',
-                                                            background: 'rgba(255,255,255,0.05)',
-                                                            border: '1px solid rgba(255,255,255,0.1)',
+                                                            background: 'rgba(255,255,255,0.15)',
+                                                            border: '1px solid var(--container-border)',
                                                             cursor: 'pointer',
-                                                            transition: 'all 0.2s'
+                                                            transition: 'all 0.2s',
+                                                            fontWeight: '600'
                                                         }}
-                                                        onMouseOver={(e) => e.target.style.background = '#FF3366'}
-                                                        onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                                        onMouseOver={(e) => e.target.style.background = 'var(--container-accent)'}
+                                                        onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.15)'}
                                                     >
                                                         {formatTime(show.startTime)}
                                                     </button>

@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import MovieDetails from './pages/MovieDetails';
 import SeatSelection from './pages/SeatSelection';
 import MyBookings from './pages/MyBookings';
+import Feedback from './pages/Feedback';
 import './App.css';
 
 // ── Home / Dashboard ───────────────────────────────────────────────
@@ -80,6 +81,13 @@ function Home({ user, onLogout, isDark, onToggleTheme }) {
                                     <span style={{color: '#fbbf24', fontWeight: 'bold'}}>✨ {user.loyaltyPoints || 0} pts</span>
                                 </div>
                             </div>
+                            <button 
+                                className="logout-btn" 
+                                onClick={() => navigate('/feedback')} 
+                                style={{marginRight: '0.5rem', background: 'rgba(255,255,255,0.05)'}}
+                            >
+                                Give Feedback
+                            </button>
                             <button 
                                 className="logout-btn" 
                                 onClick={() => navigate('/my-bookings')} 
@@ -248,6 +256,11 @@ function App() {
 
     useEffect(() => {
         localStorage.setItem('darkMode', darkMode);
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
     }, [darkMode]);
 
     const toggleDarkMode = () => setDarkMode(!darkMode);
@@ -301,6 +314,14 @@ function App() {
                     element={
                         user
                             ? <MyBookings />
+                            : <Navigate to="/login" replace />
+                    }
+                />
+                <Route
+                    path="/feedback"
+                    element={
+                        user
+                            ? <Feedback />
                             : <Navigate to="/login" replace />
                     }
                 />

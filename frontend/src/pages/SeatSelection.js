@@ -21,7 +21,7 @@ function SeatSelection() {
         const fetchItems = fetch('/api/items').then(res => res.json());
         // Fetch Show Details (for screen price)
         const fetchShow = fetch(`/api/shows/${showId}`).then(res => res.json());
- 
+
         Promise.all([fetchSeats, fetchItems, fetchShow])
             .then(([seatData, itemData, showRes]) => {
                 if (seatData.success) setSeats(seatData.data);
@@ -55,7 +55,7 @@ function SeatSelection() {
         const item = menuItems.find(i => i.itemId === parseInt(itemId));
         return total + (item ? item.basePrice * qty : 0);
     }, 0);
- 
+
     const screenPrice = showData ? showData.priceScreen : 0;
     const totalAmount = seatTotal + foodTotal + screenPrice;
 
@@ -70,7 +70,7 @@ function SeatSelection() {
         }
 
         setBookingStatus('booking');
-        
+
         const bookingData = {
             userId: user.userId || user.id,
             showId: parseInt(showId),
@@ -91,7 +91,7 @@ function SeatSelection() {
                 body: JSON.stringify(bookingData)
             });
             const data = await res.json();
-            
+
             if (data.success) {
                 setBookingStatus('success');
                 setTimeout(() => navigate('/'), 3000);
@@ -114,40 +114,42 @@ function SeatSelection() {
 
     if (bookingStatus === 'success') {
         return (
-            <div className="main-content" style={{textAlign: 'center', paddingTop: '100px'}}>
-                <div style={{fontSize: '5rem'}}>🍿</div>
-                <h1 style={{color: '#10b981'}}>Booking Confirmed!</h1>
+            <div className="main-content" style={{ textAlign: 'center', paddingTop: '100px' }}>
+                <div style={{ fontSize: '5rem' }}>🍿</div>
+                <h1 style={{ color: '#10b981' }}>Booking Confirmed!</h1>
                 <p>Your tickets have been reserved. Enjoy your movie!</p>
-                <p style={{color: '#94a3b8'}}>Redirecting to Home...</p>
+                <p style={{ color: '#94a3b8' }}>Redirecting to Home...</p>
             </div>
         );
     }
 
     return (
         <div className="main-content">
-            <button className="logout-btn" onClick={() => navigate(-1)} style={{marginBottom: '2rem'}}>&larr; Back</button>
+            <button className="logout-btn" onClick={() => navigate(-1)} style={{ marginBottom: '2rem' }}>&larr; Back</button>
 
-            <div style={{display: 'grid', gridTemplateColumns: '1fr 380px', gap: '3rem'}}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '3rem' }}>
                 <div>
-                    <h2 style={{marginBottom: '2rem'}}>Interactive Seat Map</h2>
-                    <div style={{background: 'rgba(255,255,255,0.05)', padding: '3rem', borderRadius: '20px', textAlign: 'center'}}>
-                        <div className="screen-divider" style={{marginBottom: '4rem'}}>SCREEN</div>
+                    <h2 style={{ marginBottom: '2rem' }}>Interactive Seat Map</h2>
+                    <div style={{background: 'var(--container-bg)', padding: '3rem', borderRadius: '20px', textAlign: 'center', boxShadow: 'var(--shadow)', color: 'var(--container-text)'}}>
+                        <div className="screen-divider" style={{marginBottom: '4rem', color: 'var(--container-accent)', borderBottom: '2px solid var(--container-border)'}}>SCREEN</div>
                         {loading ? <div className="loader-spinner"></div> : (
-                            <div style={{display: 'flex', flexDirection: 'column', gap: '0.8rem'}}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                                 {Object.entries(seats.reduce((acc, seat) => {
                                     const row = seat.rowNo;
                                     if (!acc[row]) acc[row] = [];
                                     acc[row].push(seat);
                                     return acc;
                                 }, {})).sort().map(([rowNo, rowSeats]) => (
-                                    <div key={rowNo} style={{display: 'flex', justifyContent: 'center', gap: '0.5rem'}}>
+                                    <div key={rowNo} style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
                                         {rowSeats.map(seat => (
-                                            <div 
+                                            <div
                                                 key={seat.seatId}
                                                 onClick={() => !seat.isBooked && toggleSeat(seat.seatId)}
                                                 style={{
                                                     width: '32px', height: '32px', borderRadius: '4px',
-                                                    background: seat.isBooked ? '#334155' : selectedSeats.includes(seat.seatId) ? '#FF3366' : 'rgba(255,255,255,0.1)',
+                                                    background: seat.isBooked ? 'var(--input-bg)' : selectedSeats.includes(seat.seatId) ? 'var(--container-accent)' : 'rgba(255,255,255,0.1)',
+                                                    color: 'var(--seat-text)',
+                                                    border: '1px solid var(--container-border)',
                                                     cursor: seat.isBooked ? 'not-allowed' : 'pointer',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
                                                     position: 'relative'
@@ -159,8 +161,8 @@ function SeatSelection() {
                                     </div>
                                 ))}
                                 {seats.length === 0 && (
-                                    <div style={{color: '#94a3b8', padding: '2rem'}}>
-                                        <div style={{fontSize: '2rem'}}>💺 ❓</div>
+                                    <div style={{ color: '#94a3b8', padding: '2rem' }}>
+                                        <div style={{ fontSize: '2rem' }}>💺 ❓</div>
                                         <p>No seats found for this screen.</p>
                                     </div>
                                 )}
@@ -168,58 +170,59 @@ function SeatSelection() {
                         )}
                     </div>
 
-                    <h2 style={{marginTop: '3rem', marginBottom: '1.5rem'}}>Order Snacks</h2>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                    <h2 style={{ marginTop: '3rem', marginBottom: '1.5rem' }}>Order Snacks</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         {menuItems.map(item => (
                             <div key={item.itemId} style={{
-                                background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                background: 'var(--container-bg)', padding: '1rem', borderRadius: '12px',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                boxShadow: 'var(--shadow)', color: 'var(--container-text)'
                             }}>
                                 <div>
                                     <h4 style={{margin: 0}}>{item.itemName}</h4>
-                                    <p style={{margin: 0, color: '#10b981', fontSize: '0.9rem'}}>Rs. {item.basePrice}</p>
+                                    <p style={{margin: 0, color: 'var(--container-accent)', fontSize: '0.9rem', fontWeight: '700'}}>Rs. {item.basePrice}</p>
                                 </div>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '0.8rem'}}>
-                                    <button onClick={() => updateItemQty(item.itemId, -1)} style={{width: '25px', height: '25px', borderRadius: '50%', border: 'none', background: '#334155', color: '#fff'}}>-</button>
-                                    <span>{selectedItems[item.itemId] || 0}</span>
-                                    <button onClick={() => updateItemQty(item.itemId, 1)} style={{width: '25px', height: '25px', borderRadius: '50%', border: 'none', background: '#FF3366', color: '#fff'}}>+</button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                    <button onClick={() => updateItemQty(item.itemId, -1)} style={{ width: '25px', height: '25px', borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.1)', color: '#1A1A1A', cursor: 'pointer' }}>-</button>
+                                    <span style={{ fontWeight: '700' }}>{selectedItems[item.itemId] || 0}</span>
+                                    <button onClick={() => updateItemQty(item.itemId, 1)} style={{ width: '25px', height: '25px', borderRadius: '50%', border: 'none', background: '#6B21A8', color: '#fff', cursor: 'pointer' }}>+</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <aside style={{background: 'rgba(30, 41, 59, 0.8)', padding: '2rem', borderRadius: '20px', height: 'fit-content'}}>
-                    <h3 style={{marginTop: 0, borderBottom: '1px solid #334155', paddingBottom: '1rem'}}>Booking Summary</h3>
-                    
-                    <div style={{marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                <aside style={{background: 'var(--container-bg)', padding: '2rem', borderRadius: '20px', height: 'fit-content', boxShadow: 'var(--shadow)', color: 'var(--container-text)'}}>
+                    <h3 style={{marginTop: 0, borderBottom: '1px solid var(--container-border)', paddingBottom: '1rem', color: 'var(--container-text)'}}>Booking Summary</h3>
+
+                    <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span>Seats ({selectedSeats.length})</span>
                             <span>Rs. {seatTotal}</span>
                         </div>
-                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span>Food & Snacks</span>
                             <span>Rs. {foodTotal}</span>
                         </div>
-                        <div style={{display: 'flex', justifyContent: 'space-between', color: '#60a5fa', fontSize: '0.9rem'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', color: 'var(--container-accent)', fontSize: '0.9rem', fontWeight: '600'}}>
                             <span>Screen Fee ({showData?.typeName})</span>
                             <span>+ Rs. {screenPrice}</span>
                         </div>
 
                         {user.loyaltyPoints >= 20 && (
                             <div style={{
-                                marginTop: '1rem', padding: '1rem', background: 'rgba(251, 191, 36, 0.1)', 
-                                border: '1px dashed #fbbf24', borderRadius: '8px'
+                                marginTop: '1rem', padding: '1rem', background: 'rgba(251, 191, 36, 0.1)',
+                                border: '1px dashed #5f4a15ff', borderRadius: '8px'
                             }}>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '10px', color: '#fbbf24'}}>
-                                    <input 
-                                        type="checkbox" 
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#b88913ff' }}>
+                                    <input
+                                        type="checkbox"
                                         id="redeem"
                                         checked={redeemNachos}
                                         onChange={(e) => setRedeemNachos(e.target.checked)}
-                                        style={{width: '18px', height: '18px', cursor: 'pointer'}}
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                     />
-                                    <label htmlFor="redeem" style={{cursor: 'pointer', fontWeight: 'bold'}}>
+                                    <label htmlFor="redeem" style={{ cursor: 'pointer', fontWeight: 'bold' }}>
                                         🎁 Redeem 20 pts for Free Nachos!
                                     </label>
                                 </div>
@@ -227,14 +230,14 @@ function SeatSelection() {
                         )}
 
                         <div style={{marginTop: '1.5rem'}}>
-                            <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#94a3b8'}}>Payment Method</label>
+                            <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--container-accent)', fontWeight: '600'}}>Payment Method</label>
                             <select 
                                 value={paymentMethod} 
                                 onChange={(e) => setPaymentMethod(e.target.value)}
                                 style={{
-                                    width: '100%', padding: '0.8rem', background: '#334155', 
-                                    border: '1px solid #475569', borderRadius: '8px', color: '#fff',
-                                    fontSize: '1rem'
+                                    width: '100%', padding: '0.8rem', background: 'var(--input-bg)', 
+                                    border: '1px solid var(--container-border)', borderRadius: '8px', color: 'var(--container-text)',
+                                    fontSize: '1rem', fontWeight: '500'
                                 }}
                             >
                                 <option value="Cash">By Cash</option>
@@ -244,39 +247,39 @@ function SeatSelection() {
                         </div>
 
                         <div style={{
-                            marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', 
+                            marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)',
                             border: '1px solid #3b82f6', borderRadius: '8px',
                             opacity: seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow) ? 1 : 0.5
                         }}>
-                            <div style={{display: 'flex', alignItems: 'center', gap: '10px', color: '#60a5fa'}}>
-                                <input 
-                                    type="checkbox" 
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#1e52c1ff' }}>
+                                <input
+                                    type="checkbox"
                                     id="wheelchair"
                                     disabled={!seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow)}
                                     checked={needsWheelchair && seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow)}
                                     onChange={(e) => setNeedsWheelchair(e.target.checked)}
-                                    style={{width: '18px', height: '18px', cursor: 'pointer'}}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                 />
-                                <label htmlFor="wheelchair" style={{cursor: 'pointer', fontSize: '0.9rem'}}>
+                                <label htmlFor="wheelchair" style={{ cursor: 'pointer', fontSize: '0.9rem', fontWeight: '600' }}>
                                     ♿ Request Wheelchair Assistance
-                                    {!seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow) && 
-                                        <div style={{fontSize: '0.7rem', color: '#94a3b8'}}>(Select a ♿ seat to enable)</div>
+                                    {!seats.some(s => selectedSeats.includes(s.seatId) && s.isWheelchairAllow) &&
+                                        <div style={{ fontSize: '0.7rem', color: '#4A1D1F' }}>(Select a ♿ seat to enable)</div>
                                     }
                                 </label>
                             </div>
                         </div>
 
-                        <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #334155', paddingTop: '1rem', fontSize: '1.3rem', fontWeight: '800'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--container-border)', paddingTop: '1rem', fontSize: '1.3rem', fontWeight: '800'}}>
                             <span>Total</span>
-                            <span style={{color: '#FF3366'}}>Rs. {totalAmount}</span>
+                            <span style={{color: 'var(--container-accent)'}}>Rs. {totalAmount}</span>
                         </div>
                     </div>
 
-                    <button 
-                        className="book-btn" 
+                    <button
+                        className="book-btn"
                         disabled={bookingStatus === 'booking'}
                         onClick={handleConfirm}
-                        style={{width: '100%', marginTop: '2rem', padding: '1rem', fontSize: '1.1rem'}}
+                        style={{ width: '100%', marginTop: '2rem', padding: '1rem', fontSize: '1.1rem' }}
                     >
                         {bookingStatus === 'booking' ? 'Processing...' : 'Confirm & Book'}
                     </button>

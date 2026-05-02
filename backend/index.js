@@ -445,6 +445,28 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
     }
 });
 
+// POST /api/feedback - Save user experience feedback
+app.post('/api/feedback', async (req, res) => {
+    const { userId, rating, comments } = req.body;
+    if (!userId || !rating) {
+        return res.status(400).json({ success: false, error: 'Missing userId or rating' });
+    }
+    try {
+        const pool = await getConnection();
+        await pool.request()
+            .input('uid', userId)
+            .input('rate', rating)
+            .input('msg', comments || '')
+            .query('INSERT INTO Feedback (userId, rating, comments) VALUES (@uid, @rate, @msg)');
+        
+        console.log(`💬 [FEEDBACK] New feedback from User ${userId}: ${rating} stars`);
+        res.json({ success: true, message: 'Feedback submitted! Thank you.' });
+    } catch (error) {
+        console.error('❌ Feedback Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) return res.status(404).json({ error: 'No API' });
     res.sendFile(path.join(pub, 'index.html'));
