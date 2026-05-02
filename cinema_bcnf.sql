@@ -1032,4 +1032,30 @@ CREATE TABLE Feedback (
     submitted_at DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
 );
+
+
+
+-- Check if columns exist
+SELECT COLUMN_NAME 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'Users';
+
+-- If 'email' shows up in the list above, run this:
+UPDATE Users SET isAdmin = 1 WHERE email = 'admin@123'; 
 select* from Feedback
+
+--select*from Users
+--update Users
+--set name='Maria' where id=1
+
+
+--select*from Users
+--update Users
+--set isAdmin=0 where id=1
+
+
+--update Users
+--set email='maria@123' where id=1
+
+
+--select* from Feedback
