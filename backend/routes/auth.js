@@ -37,7 +37,7 @@ router.post('/register', async (req, res) => {
             .input('phoneNo', phoneNo || null)
             .query(`
                 INSERT INTO Users (name, email, password_hash, phoneNo) 
-                OUTPUT INSERTED.id, INSERTED.name, INSERTED.email, INSERTED.phoneNo
+                OUTPUT INSERTED.id, INSERTED.name, INSERTED.email, INSERTED.phoneNo, INSERTED.isAdmin
                 VALUES (@name, @email, @password_hash, @phoneNo)
             `);
 
@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
 
         res.json({
             success: true,
-            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo }
+            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, isAdmin: user.isAdmin || 0 }
         });
 
     } catch (error) {
@@ -87,7 +87,7 @@ router.post('/login', async (req, res) => {
 
         res.json({
             success: true,
-            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo }
+            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, isAdmin: user.isAdmin || 0 }
         });
 
     } catch (error) {

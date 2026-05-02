@@ -12,15 +12,21 @@
   --border: rgba(107, 33, 168, 0.1);
   --shadow: rgba(0, 0, 0, 0.04);
   --input-bg: #FFFFFF;
-  /* Light search bar */
+
+  /* Showtime/Container specific (Light Mode) */
+  --container-bg: #E8B4B8;
+  --container-text: #1A1A1A;
+  --container-border: rgba(0, 0, 0, 0.1);
+  --container-accent: #6B21A8;
+  --seat-text: #1A1A1A;
 }
 
 .dark-mode {
   /* Dark Theme (Obsidian Luxury) */
   --primary: #A855F7;
   --secondary: #392853;
-  --bg-dark: #050505;
-  /* Deep Obsidian */
+  --bg-dark: #1A0B2E;
+  /* Deep Purplish Obsidian */
   --bg-card: #121212;
   /* Charcoal Card */
   --text-main: #ddcaee;
@@ -29,6 +35,13 @@
   --shadow: rgba(0, 0, 0, 0.6);
   --input-bg: #1A1A22;
   /* Dark search bar */
+
+  /* Showtime/Container specific (Dark Mode) */
+  --container-bg: #121212;
+  --container-text: #ddcaee;
+  --container-border: #222222;
+  --container-accent: #A855F7;
+  --seat-text: #FFFFFF;
 }
 
 body {
@@ -245,6 +258,7 @@ body {
   transform: translateY(-1px);
   filter: brightness(1.1);
 }
+
 
 /* ─── Main Content Layout ───────────────────────── */
 .layout-container {

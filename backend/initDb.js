@@ -26,12 +26,28 @@ async function initDb() {
                 BEGIN
                     ALTER TABLE Booking ADD needsWheelchair BIT DEFAULT 0
                 END
+
+                -- AUTO-FIX: Add isAdmin to Users
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'isAdmin')
+                BEGIN
+                    ALTER TABLE Users ADD isAdmin BIT DEFAULT 0
+                END
+
+                -- AUTO-FIX: Add admin response fields to Feedback
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Feedback') AND name = 'adminResponse')
+                BEGIN
+                    ALTER TABLE Feedback ADD adminResponse NVARCHAR(MAX)
+                END
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Feedback') AND name = 'respondedAt')
+                BEGIN
+                    ALTER TABLE Feedback ADD respondedAt DATETIME
+                END
             `);
             console.log('✅ Loyalty system verified.');
         } catch (e) { console.error('Points verify error:', e.message); }
 
         const tables = [
-            { name: 'Users', query: `CREATE TABLE Users (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(200) NOT NULL, email NVARCHAR(200) UNIQUE NOT NULL, password_hash NVARCHAR(510) NOT NULL, phoneNo NVARCHAR(40), loyaltyPoints INT DEFAULT 0, created_at DATETIME DEFAULT GETDATE())` },
+            { name: 'Users', query: `CREATE TABLE Users (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(200) NOT NULL, email NVARCHAR(200) UNIQUE NOT NULL, password_hash NVARCHAR(510) NOT NULL, phoneNo NVARCHAR(40), loyaltyPoints INT DEFAULT 0, isAdmin BIT DEFAULT 0, created_at DATETIME DEFAULT GETDATE())` },
             { name: 'Cinema', query: `CREATE TABLE Cinema (cinemaId INT PRIMARY KEY IDENTITY(1,1), name VARCHAR(255) NOT NULL, location VARCHAR(MAX) NOT NULL, contact VARCHAR(50), openingTime TIME, closingTime TIME, isActive BIT DEFAULT 1)` },
             { name: 'ScreenType', query: `CREATE TABLE ScreenType (screenTypeId INT PRIMARY KEY IDENTITY(1,1), typeName VARCHAR(100) NOT NULL, description VARCHAR(MAX), priceScreen DECIMAL(10,2) CHECK (priceScreen >= 0))` },
             { name: 'Screen', query: `CREATE TABLE Screen (screenId INT PRIMARY KEY IDENTITY(1,1), cinemaId INT NOT NULL, screenTypeId INT NOT NULL, totalSeats INT CHECK (totalSeats > 0), isActive BIT DEFAULT 1, FOREIGN KEY (cinemaId) REFERENCES Cinema(cinemaId) ON DELETE CASCADE, FOREIGN KEY (screenTypeId) REFERENCES ScreenType(screenTypeId))` },
@@ -47,7 +63,8 @@ async function initDb() {
             { name: 'FoodOrder', query: `CREATE TABLE FoodOrder (foodOrderId INT PRIMARY KEY IDENTITY(1,1), bookingId INT NOT NULL, orderDate DATETIME DEFAULT GETDATE(), totalAmount DECIMAL(10,2) DEFAULT 0 CHECK (totalAmount >= 0), FOREIGN KEY (bookingId) REFERENCES Booking(bookingId) ON DELETE CASCADE)` },
             { name: 'FoodOrderDetail', query: `CREATE TABLE FoodOrderDetail (foodOrderId INT NOT NULL, itemId INT NOT NULL, quantity INT CHECK (quantity > 0), PRIMARY KEY (foodOrderId, itemId), FOREIGN KEY (foodOrderId) REFERENCES FoodOrder(foodOrderId) ON DELETE CASCADE, FOREIGN KEY (itemId) REFERENCES Item(itemId))` },
             { name: 'Discount', query: `CREATE TABLE Discount (discountId INT PRIMARY KEY IDENTITY(1,1), discountCode VARCHAR(50) UNIQUE NOT NULL, discountType VARCHAR(20) CHECK (discountType IN ('PERCENTAGE','FIXED')), discountValue DECIMAL(10,2) CHECK (discountValue >= 0), validFrom DATE, validTo DATE, applicableDays VARCHAR(50), isActive BIT DEFAULT 1)` },
-            { name: 'Refund', query: `CREATE TABLE Refund (refundId INT PRIMARY KEY IDENTITY(1,1), bookingId INT NOT NULL, refundDate DATETIME DEFAULT GETDATE(), refundAmount DECIMAL(10,2) NOT NULL, refundStatus VARCHAR(50) DEFAULT 'Processed', FOREIGN KEY (bookingId) REFERENCES Booking(bookingId))` }
+            { name: 'Refund', query: `CREATE TABLE Refund (refundId INT PRIMARY KEY IDENTITY(1,1), bookingId INT NOT NULL, refundDate DATETIME DEFAULT GETDATE(), refundAmount DECIMAL(10,2) NOT NULL, refundStatus VARCHAR(50) DEFAULT 'Processed', FOREIGN KEY (bookingId) REFERENCES Booking(bookingId))` },
+            { name: 'Feedback', query: `CREATE TABLE Feedback (feedbackId INT PRIMARY KEY IDENTITY(1,1), userId INT NOT NULL, rating INT CHECK (rating >= 1 AND rating <= 5), comments NVARCHAR(MAX), adminResponse NVARCHAR(MAX), respondedAt DATETIME, submitted_at DATETIME DEFAULT GETDATE(), FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE)` }
         ];
 
         for (const table of tables) {

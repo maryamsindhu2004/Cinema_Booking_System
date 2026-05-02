@@ -5,6 +5,9 @@ import Register from './pages/Register';
 import MovieDetails from './pages/MovieDetails';
 import SeatSelection from './pages/SeatSelection';
 import MyBookings from './pages/MyBookings';
+import Feedback from './pages/Feedback';
+import AdminFeedback from './pages/AdminFeedback';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
 // ── Home / Dashboard ───────────────────────────────────────────────
@@ -50,7 +53,7 @@ function Home({ user, onLogout, isDark, onToggleTheme }) {
             <header className="hero-section">
                 <div className="header-top">
                     <div className="brand">
-                        <span className="brand-icon">🎭</span>
+                        <span className="brand-icon">🎞️</span>
                         <div>
                             <h1 className="title">THEATRO <span className="highlight">Cinemas</span></h1>
                         </div>
@@ -64,26 +67,43 @@ function Home({ user, onLogout, isDark, onToggleTheme }) {
                             </div>
                         )}
                         <div className="user-pill">
-                            <button 
-                                className="theme-toggle" 
-                                onClick={() => onToggleTheme()} 
-                                style={{marginRight: '0.5rem'}}
+                            <button
+                                className="theme-toggle"
+                                onClick={() => onToggleTheme()}
+                                style={{ marginRight: '0.5rem' }}
                                 title="Toggle Theme"
                             >
                                 {isDark ? '☀️' : '🌙'}
                             </button>
                             <span className="user-avatar">{user.name.charAt(0).toUpperCase()}</span>
                             <div className="user-info">
-                                <span className="user-name">{user.name}</span>
-                                <div style={{display: 'flex', gap: '0.5rem', fontSize: '0.75rem'}}>
+                                <span className="user-name">{user.name} {user.isAdmin ? <span style={{fontSize: '0.7rem', color: 'var(--container-accent)'}}>(Admin)</span> : ''}</span>
+                                <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem' }}>
                                     {user.phoneNo && <span className="user-phone">{user.phoneNo}</span>}
-                                    <span style={{color: '#fbbf24', fontWeight: 'bold'}}>✨ {user.loyaltyPoints || 0} pts</span>
+                                    <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>✨ {user.loyaltyPoints || 0} pts</span>
                                 </div>
                             </div>
-                            <button 
-                                className="logout-btn" 
-                                onClick={() => navigate('/my-bookings')} 
-                                style={{marginRight: '0.5rem', background: 'rgba(255,255,255,0.05)'}}
+                            {!(user.isAdmin === true || user.isAdmin === 1 || user.isAdmin === 'true' || user.isAdmin === '1') ? (
+                                <button
+                                    className="logout-btn"
+                                    onClick={() => navigate('/feedback')}
+                                    style={{ marginRight: '0.5rem', background: 'rgba(255,255,255,0.05)' }}
+                                >
+                                    Give Feedback
+                                </button>
+                            ) : (
+                                <button
+                                    className="logout-btn"
+                                    onClick={() => navigate('/admin/dashboard')}
+                                    style={{ marginRight: '0.5rem', background: '#FF3366', color: '#fff', border: '1px solid #FF3366', fontWeight: 'bold' }}
+                                >
+                                    Admin Dashboard
+                                </button>
+                            )}
+                            <button
+                                className="logout-btn"
+                                onClick={() => navigate('/my-bookings')}
+                                style={{ marginRight: '0.5rem', background: 'rgba(255,255,255,0.05)' }}
                             >
                                 My Bookings
                             </button>
@@ -100,15 +120,15 @@ function Home({ user, onLogout, isDark, onToggleTheme }) {
                     <div className="filter-group">
                         <h3>Genres</h3>
                         <div className="filter-list">
-                            <div 
+                            <div
                                 className={`filter-item ${selectedGenre === '' ? 'active' : ''}`}
                                 onClick={() => setSelectedGenre('')}
                             >
                                 All Genres
                             </div>
                             {genres.map(g => (
-                                <div 
-                                    key={g} 
+                                <div
+                                    key={g}
                                     className={`filter-item ${selectedGenre === g ? 'active' : ''}`}
                                     onClick={() => setSelectedGenre(g)}
                                 >
@@ -121,15 +141,15 @@ function Home({ user, onLogout, isDark, onToggleTheme }) {
                     <div className="filter-group">
                         <h3>Language</h3>
                         <div className="filter-list">
-                            <div 
+                            <div
                                 className={`filter-item ${selectedLang === '' ? 'active' : ''}`}
                                 onClick={() => setSelectedLang('')}
                             >
                                 All Languages
                             </div>
                             {languages.map(l => (
-                                <div 
-                                    key={l} 
+                                <div
+                                    key={l}
                                     className={`filter-item ${selectedLang === l ? 'active' : ''}`}
                                     onClick={() => setSelectedLang(l)}
                                 >
@@ -141,25 +161,25 @@ function Home({ user, onLogout, isDark, onToggleTheme }) {
                 </aside>
 
                 <main className="main-content">
-                    <div className="section-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'}}>
+                    <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                         <div>
-                            <h2 style={{margin: 0}}>{showingOnly ? '🔥 Showing Now' : '🎬 All Movies'}</h2>
-                            <p style={{margin: '0.5rem 0 0 0'}}>Explore films in {selectedGenre || 'all genres'} and {selectedLang || 'all languages'}</p>
+                            <h2 style={{ margin: 0 }}>{showingOnly ? '🎥🎟️ Showing Now' : '🎬 All Movies'}</h2>
+                            <p style={{ margin: '0.5rem 0 0 0' }}>Explore films in {selectedGenre || 'all genres'} and {selectedLang || 'all languages'}</p>
                         </div>
-                        
-                        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-                            <div style={{position: 'relative'}}>
-                                <input 
-                                    type="text" 
+
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
                                     className="search-bar"
-                                    placeholder="Search by title..." 
+                                    placeholder="Search by title..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
-                                <span style={{position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5}}>🔍</span>
+                                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
                             </div>
-                            
-                            <button 
+
+                            <button
                                 className={`showing-now-btn ${showingOnly ? 'active' : ''}`}
                                 onClick={() => setShowingOnly(!showingOnly)}
                             >
@@ -248,66 +268,95 @@ function App() {
 
     useEffect(() => {
         localStorage.setItem('darkMode', darkMode);
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
     }, [darkMode]);
 
     const toggleDarkMode = () => setDarkMode(!darkMode);
 
     return (
         <div className={darkMode ? 'dark-mode' : ''}>
-        <Router>
-            <Routes>
-                <Route
-                    path="/"
-                    element={
-                        user
-                            ? <Home user={user} onLogout={handleLogout} isDark={darkMode} onToggleTheme={toggleDarkMode} />
-                            : <Navigate to="/login" replace />
-                    }
-                />
-                <Route
-                    path="/login"
-                    element={
-                        user
-                            ? <Navigate to="/" replace />
-                            : <Login onLogin={handleLogin} />
-                    }
-                />
-                <Route
-                    path="/register"
-                    element={
-                        user
-                            ? <Navigate to="/" replace />
-                            : <Register onLogin={handleLogin} />
-                    }
-                />
-                <Route
-                    path="/movie/:id"
-                    element={
-                        user
-                            ? <MovieDetails />
-                            : <Navigate to="/login" replace />
-                    }
-                />
-                <Route
-                    path="/book/:showId"
-                    element={
-                        user
-                            ? <SeatSelection />
-                            : <Navigate to="/login" replace />
-                    }
-                />
-                <Route
-                    path="/my-bookings"
-                    element={
-                        user
-                            ? <MyBookings />
-                            : <Navigate to="/login" replace />
-                    }
-                />
-                {/* Catch-all */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </Router>
+            <Router>
+                <Routes>
+                    <Route
+                        path="/"
+                        element={
+                            user
+                                ? <Home user={user} onLogout={handleLogout} isDark={darkMode} onToggleTheme={toggleDarkMode} />
+                                : <Navigate to="/login" replace />
+                        }
+                    />
+                    <Route
+                        path="/login"
+                        element={
+                            user
+                                ? <Navigate to="/" replace />
+                                : <Login onLogin={handleLogin} />
+                        }
+                    />
+                    <Route
+                        path="/register"
+                        element={
+                            user
+                                ? <Navigate to="/" replace />
+                                : <Register onLogin={handleLogin} />
+                        }
+                    />
+                    <Route
+                        path="/movie/:id"
+                        element={
+                            user
+                                ? <MovieDetails />
+                                : <Navigate to="/login" replace />
+                        }
+                    />
+                    <Route
+                        path="/book/:showId"
+                        element={
+                            user
+                                ? <SeatSelection />
+                                : <Navigate to="/login" replace />
+                        }
+                    />
+                    <Route
+                        path="/my-bookings"
+                        element={
+                            user
+                                ? <MyBookings />
+                                : <Navigate to="/login" replace />
+                        }
+                    />
+                    <Route
+                        path="/admin/dashboard"
+                        element={
+                            user && user.isAdmin
+                                ? <AdminDashboard />
+                                : <Navigate to="/" replace />
+                        }
+                    />
+                    <Route
+                        path="/admin/feedback"
+                        element={
+                            user && user.isAdmin
+                                ? <AdminFeedback />
+                                : <Navigate to="/" replace />
+                        }
+                    />
+                    <Route
+                        path="/feedback"
+                        element={
+                            user
+                                ? <Feedback />
+                                : <Navigate to="/login" replace />
+                        }
+                    />
+                    {/* Catch-all */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </Router>
         </div>
     );
 }
