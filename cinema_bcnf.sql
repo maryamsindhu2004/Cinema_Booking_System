@@ -1059,3 +1059,144 @@ select* from Feedback
 
 
 --select* from Feedback
+
+
+-- ===============================================================
+-- ACADEMIC REQUIREMENTS: VIEWS, STORED PROCEDURES, TRIGGERS
+-- ===============================================================
+
+GO
+
+-- ---------------------------------------------------------------
+-- 1. VIEWS
+-- ---------------------------------------------------------------
+
+-- View 1: vw_ShowtimeDetails
+-- Simplifies complex joins to easily see show schedules
+CREATE VIEW vw_ShowtimeDetails AS
+SELECT 
+    s.showId,
+    m.title AS MovieTitle,
+    c.name AS CinemaName,
+    st.typeName AS ScreenType,
+    s.showDate,
+    s.startTime,
+    s.endTime,
+    s.isCancelled
+FROM ShowTable s
+JOIN Movie m ON s.movieId = m.movieId
+JOIN Screen sc ON s.screenId = sc.screenId
+JOIN Cinema c ON sc.cinemaId = c.cinemaId
+JOIN ScreenType st ON sc.screenTypeId = st.screenTypeId;
+GO
+
+-- View 2: vw_MovieGenres
+-- Easily see movies with their text genre instead of IDs
+CREATE VIEW vw_MovieGenres AS
+SELECT 
+    m.movieId,
+    m.title,
+    m.language,
+    g.genreName
+FROM Movie m
+JOIN MovieGenre mg ON m.movieId = mg.movieId
+JOIN Genre g ON mg.genreId = g.genreId;
+GO
+
+-- ---------------------------------------------------------------
+-- 2. STORED PROCEDURES
+-- ---------------------------------------------------------------
+
+-- Procedure 1: sp_GetAvailableSeats
+-- Calculates available seats for a specific show by excluding booked ones
+CREATE PROCEDURE sp_GetAvailableSeats
+    @ShowId INT
+AS
+BEGIN
+    SELECT s.seatId, s.seatNo, s.rowNo, st.category, st.priceSeat
+    FROM Seat s
+    JOIN SeatType st ON s.seatTypeId = st.seatTypeId
+    JOIN ShowTable sh ON s.screenId = sh.screenId
+    WHERE sh.showId = @ShowId
+    AND s.seatId NOT IN (
+        SELECT bs.seatId 
+        FROM BookingSeat bs 
+        JOIN Booking b ON bs.bookingId = b.bookingId 
+        WHERE b.showId = @ShowId AND b.bookingStatus = 1
+    );
+END;
+GO
+
+-- Procedure 2: sp_CancelBooking
+-- Safely cancels a booking and inserts a record into Refund table
+CREATE PROCEDURE sp_CancelBooking
+    @BookingId INT,
+    @RefundAmount DECIMAL(10,2)
+AS
+BEGIN
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- Mark booking as cancelled (status 0)
+        UPDATE Booking
+        SET bookingStatus = 0
+        WHERE bookingId = @BookingId;
+
+        -- Insert refund record
+        INSERT INTO Refund (bookingId, refundDate, refundAmount, refundStatus)
+        VALUES (@BookingId, GETDATE(), @RefundAmount, 'Processed');
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- ---------------------------------------------------------------
+-- 3. TRIGGERS
+-- ---------------------------------------------------------------
+
+-- Trigger 1: trg_AddLoyaltyPoints
+-- Automatically adds loyalty points to a user when a booking is made
+CREATE TRIGGER trg_AddLoyaltyPoints
+ON Booking
+AFTER INSERT
+AS
+BEGIN
+    -- Add 10 points for every new booking
+    UPDATE Users
+    SET loyaltyPoints = ISNULL(loyaltyPoints, 0) + 10
+    FROM Users U
+    INNER JOIN inserted I ON U.id = I.userId
+    WHERE I.bookingStatus = 1;
+END;
+GO
+
+-- Trigger 2: trg_CheckShowtimeOverlap
+-- Prevents scheduling a show on a screen if times overlap
+CREATE TRIGGER trg_CheckShowtimeOverlap
+ON ShowTable
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM ShowTable s
+        JOIN inserted i ON s.screenId = i.screenId AND s.showDate = i.showDate
+        WHERE s.showId != i.showId 
+        AND s.isCancelled = 0 AND i.isCancelled = 0
+        AND (
+            (i.startTime >= s.startTime AND i.startTime < s.endTime) OR
+            (i.endTime > s.startTime AND i.endTime <= s.endTime) OR
+            (i.startTime <= s.startTime AND i.endTime >= s.endTime)
+        )
+    )
+    BEGIN
+        RAISERROR ('Showtime overlaps with an existing show on this screen.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+END;
+GO

@@ -224,7 +224,7 @@ app.post('/api/bookings', async (req, res) => {
             .input('showId', showId)
             .input('pm', paymentMethod || 'Cash')
             .input('wheel', needsWheelchair ? 1 : 0)
-            .query('INSERT INTO Booking (userId, showId, bookingDate, bookingStatus, paymentMethod, needsWheelchair) OUTPUT INSERTED.bookingId VALUES (@userId, @showId, GETDATE(), 1, @pm, @wheel)');
+            .query('INSERT INTO Booking (userId, showId, bookingDate, bookingStatus, paymentMethod, needsWheelchair) VALUES (@userId, @showId, GETDATE(), 1, @pm, @wheel); SELECT SCOPE_IDENTITY() AS bookingId;');
         
         const bookingId = bookingResult.recordset[0].bookingId;
 
