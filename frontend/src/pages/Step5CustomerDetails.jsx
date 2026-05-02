@@ -1,23 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
+import useFlowGuard from "../hooks/useFlowGuard";
 
 export default function Step5CustomerDetails() {
     const { booking, updateBooking } = useBooking();
     const navigate = useNavigate();
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState(booking.customer || {
         full_name: "",
         email: "",
         phone: ""
     });
 
-    // guard (must come from Step 4)
-    useEffect(() => {
-        if (!booking.seats || booking.seats.length === 0) {
-            navigate("/step1");
-        }
-    }, []);
+    // standardized guard
+    useFlowGuard(["movieId", "showtimeId", "seats"]);
 
     function handleChange(e) {
         setForm({
@@ -42,7 +39,7 @@ export default function Step5CustomerDetails() {
 
     return (
         <div style={{ padding: 20, maxWidth: 400, margin: "auto" }}>
-            <h2>Customer Details</h2>
+            <h2>Step 5: Customer Details</h2>
 
             {/* NAME */}
             <div style={{ marginBottom: 10 }}>
@@ -80,33 +77,13 @@ export default function Step5CustomerDetails() {
                 />
             </div>
 
-            {/* PREVIEW */}
-            <div style={{
-                marginTop: 20,
-                padding: 10,
-                background: "#f4f4f4",
-                borderRadius: 5,
-                fontSize: 12
-            }}>
-                <strong>Preview:</strong>
-                <pre>{JSON.stringify(form, null, 2)}</pre>
+            {/* NAVIGATION */}
+            <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+                <button onClick={() => navigate("/step4")} style={secondaryBtn}>Back</button>
+                <button onClick={next} style={primaryBtn}>
+                    Continue to Summary
+                </button>
             </div>
-
-            {/* NEXT BUTTON */}
-            <button
-                onClick={next}
-                style={{
-                    marginTop: 15,
-                    width: "100%",
-                    padding: 10,
-                    background: "black",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 5
-                }}
-            >
-                Continue to Payment
-            </button>
         </div>
     );
 }
@@ -116,5 +93,25 @@ const inputStyle = {
     padding: 10,
     marginTop: 5,
     border: "1px solid #ccc",
-    borderRadius: 5
+    borderRadius: 5,
+    boxSizing: "border-box"
+};
+
+const primaryBtn = {
+    padding: "10px 20px",
+    background: "black",
+    color: "white",
+    border: "none",
+    borderRadius: 5,
+    cursor: "pointer",
+    flex: 1
+};
+
+const secondaryBtn = {
+    padding: "10px 20px",
+    background: "white",
+    color: "black",
+    border: "1px solid black",
+    borderRadius: 5,
+    cursor: "pointer"
 };

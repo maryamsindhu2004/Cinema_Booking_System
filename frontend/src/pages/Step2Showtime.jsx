@@ -10,10 +10,10 @@ const mockShowtimes = [
 ];
 
 export default function Step2Showtime() {
+  const { booking, updateBooking } = useBooking();
   const [showtimes, setShowtimes] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(booking.showtimeId);
 
-  const { updateBooking } = useBooking();
   const navigate = useNavigate();
 
   useFlowGuard(["movieId"]);
@@ -28,27 +28,52 @@ export default function Step2Showtime() {
   }
 
   return (
-    <div>
-      <h2>Select Showtime</h2>
+    <div style={{ padding: 20 }}>
+      <h2>Step 2: Select Showtime</h2>
 
-      {showtimes.map(s => (
-        <div
-          key={s.id}
-          onClick={() => setSelected(s.id)}
-          style={{
-            padding: 10,
-            margin: 5,
-            border: selected === s.id ? "2px solid green" : "1px solid gray",
-            cursor: "pointer"
-          }}
-        >
-          {s.time}
-        </div>
-      ))}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        {showtimes.map(s => (
+          <div
+            key={s.id}
+            onClick={() => setSelected(s.id)}
+            style={{
+              padding: "15px 30px",
+              borderRadius: 8,
+              cursor: "pointer",
+              transition: "0.2s",
+              border: selected === s.id ? "3px solid #000" : "1px solid #ccc",
+              backgroundColor: selected === s.id ? "#f0f0f0" : "#fff"
+            }}
+          >
+            {s.time}
+          </div>
+        ))}
+      </div>
 
-      <button disabled={!selected} onClick={next}>
-        Next
-      </button>
+      <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+        <button onClick={() => navigate("/step1")} style={secondaryBtn}>Back</button>
+        <button disabled={!selected} onClick={next} style={primaryBtn}>
+          Continue to Seats
+        </button>
+      </div>
     </div>
   );
 }
+
+const primaryBtn = {
+  padding: "10px 20px",
+  background: "black",
+  color: "white",
+  border: "none",
+  borderRadius: 5,
+  cursor: "pointer"
+};
+
+const secondaryBtn = {
+  padding: "10px 20px",
+  background: "white",
+  color: "black",
+  border: "1px solid black",
+  borderRadius: 5,
+  cursor: "pointer"
+};

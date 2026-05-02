@@ -15,11 +15,15 @@ router.post("/create", async (req, res) => {
         const request = new sql.Request(transaction);
 
         const {
-            showId,
-            seats,
-            customer,
-            foodItems
+            showtimeId, // matched from frontend
+            seats,      // array of INT ids
+            customer,   // { full_name, email, phone }
+            food        // object { item_id: { qty, item } }
         } = req.body;
+
+        if (!showtimeId || !seats || !customer) {
+            throw new Error("Missing required booking fields");
+        }
 
         // ==========================
         // 1. CREATE USER
@@ -28,9 +32,9 @@ router.post("/create", async (req, res) => {
             INSERT INTO Users (full_name, email, phone, user_role)
             OUTPUT INSERTED.user_id
             VALUES (
-                '${customer.full_name}',
-                '${customer.email}',
-                '${customer.phone}',
+                '${customer.full_name.replace(/'/g, "''")}',
+                '${customer.email.replace(/'/g, "''")}',
+                '${customer.phone.replace(/'/g, "''")}',
                 'Customer'
             )
         `);
@@ -43,7 +47,7 @@ router.post("/create", async (req, res) => {
         const bookingResult = await request.query(`
             INSERT INTO Bookings (user_id, show_id)
             OUTPUT INSERTED.booking_id
-            VALUES (${userId}, ${showId})
+            VALUES (${userId}, ${showtimeId})
         `);
 
         const bookingId = bookingResult.recordset[0].booking_id;
@@ -55,7 +59,7 @@ router.post("/create", async (req, res) => {
             SELECT bs.seat_id
             FROM BookingSeats bs
             JOIN Bookings b ON bs.booking_id = b.booking_id
-            WHERE b.show_id = ${showId}
+            WHERE b.show_id = ${showtimeId}
             AND bs.seat_id IN (${seats.join(",")})
         `);
 
@@ -80,19 +84,20 @@ router.post("/create", async (req, res) => {
         // ==========================
         // 5. FOOD (OPTIONAL)
         // ==========================
-        if (foodItems && foodItems.length > 0) {
-            const foodResult = await request.query(`
+        if (food && Object.keys(food).length > 0) {
+            const foodOrderResult = await request.query(`
                 INSERT INTO FoodOrders (booking_id)
                 OUTPUT INSERTED.food_order_id
                 VALUES (${bookingId})
             `);
 
-            const foodOrderId = foodResult.recordset[0].food_order_id;
+            const foodOrderId = foodOrderResult.recordset[0].food_order_id;
 
-            for (let item of foodItems) {
+            for (let itemId in food) {
+                const item = food[itemId];
                 await request.query(`
                     INSERT INTO FoodOrderItems (food_order_id, item_id, quantity)
-                    VALUES (${foodOrderId}, ${item.id}, ${item.qty})
+                    VALUES (${foodOrderId}, ${itemId}, ${item.qty})
                 `);
             }
         }
@@ -105,12 +110,12 @@ router.post("/create", async (req, res) => {
         });
 
     } catch (err) {
-        await transaction.rollback();
-        console.error(err);
+        if (transaction._aborted === false) await transaction.rollback();
+        console.error("Booking creation error:", err);
 
         res.status(500).json({
             success: false,
-            message: "Booking failed"
+            message: "Booking failed: " + err.message
         });
     }
 });

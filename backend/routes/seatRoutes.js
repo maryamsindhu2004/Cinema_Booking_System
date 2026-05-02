@@ -14,11 +14,15 @@ router.get("/:show_id", async (req, res) => {
         const pool = await getPool();
         const show_id = req.params.show_id;
 
+        // Get all seats for the screen associated with this show
         const seats = await pool.request().query(`
-            SELECT s.seat_id, s.seat_no
+            SELECT s.seat_id, s.seat_no, s.row_no
             FROM Seats s
+            JOIN Shows sh ON s.screen_id = sh.screen_id
+            WHERE sh.show_id = ${show_id}
         `);
 
+        // Get already booked seats for this show
         const booked = await pool.request().query(`
             SELECT bs.seat_id
             FROM BookingSeats bs
@@ -32,8 +36,8 @@ router.get("/:show_id", async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error loading seats");
+        console.error("Error loading seats:", err);
+        res.status(500).send("Error loading seats: " + err.message);
     }
 });
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { useNavigate } from "react-router-dom";
+import useFlowGuard from "../hooks/useFlowGuard";
 
 const API = "http://localhost:3000";
 
@@ -9,20 +10,17 @@ export default function Step4Food() {
     const navigate = useNavigate();
 
     const [items, setItems] = useState([]);
-    const [cart, setCart] = useState({});
+    const [cart, setCart] = useState(booking.food || {});
 
-    // guard
-    useEffect(() => {
-        if (!booking.seats) {
-            navigate("/step1");
-        }
-    }, []);
+    // standardized guard
+    useFlowGuard(["movieId", "showtimeId", "seats"]);
 
     // fetch food items
     useEffect(() => {
         fetch(`${API}/food/items`)
             .then(res => res.json())
-            .then(data => setItems(data));
+            .then(data => setItems(data))
+            .catch(err => console.error("Failed to fetch food", err));
     }, []);
 
     // add item
@@ -79,8 +77,8 @@ export default function Step4Food() {
     }
 
     return (
-        <div style={{ padding: 20 }}>
-            <h2>Food & Snacks</h2>
+        <div style={{ padding: 20, maxWidth: 600, margin: "auto" }}>
+            <h2>Step 4: Food & Snacks</h2>
 
             {/* FOOD LIST */}
             <div style={{ display: "grid", gap: 10 }}>
@@ -93,20 +91,27 @@ export default function Step4Food() {
                             style={{
                                 display: "flex",
                                 justifyContent: "space-between",
-                                padding: 10,
+                                padding: 15,
                                 border: "1px solid #ddd",
-                                borderRadius: 6
+                                borderRadius: 8,
+                                backgroundColor: qty > 0 ? "#f9f9f9" : "#fff"
                             }}
                         >
                             <div>
-                                <strong>{item.item_name}</strong>
-                                <div>Rs {item.price}</div>
+                                <strong style={{ fontSize: 16 }}>{item.item_name}</strong>
+                                <div style={{ color: "#666" }}>Rs {item.price}</div>
                             </div>
 
-                            <div style={{ display: "flex", gap: 10 }}>
-                                <button onClick={() => removeItem(item)}>-</button>
-                                <span>{qty}</span>
-                                <button onClick={() => addItem(item)}>+</button>
+                            <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+                                <button 
+                                    onClick={() => removeItem(item)}
+                                    style={circleBtn}
+                                >-</button>
+                                <span style={{ fontWeight: "bold", width: 20, textAlign: "center" }}>{qty}</span>
+                                <button 
+                                    onClick={() => addItem(item)}
+                                    style={circleBtn}
+                                >+</button>
                             </div>
                         </div>
                     );
@@ -115,28 +120,58 @@ export default function Step4Food() {
 
             {/* SUMMARY */}
             <div style={{
-                marginTop: 20,
-                padding: 10,
-                borderTop: "2px solid black"
+                marginTop: 30,
+                padding: "20px 0",
+                borderTop: "2px solid #eee",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
             }}>
-                <h3>Total: Rs {total}</h3>
+                <h3 style={{ margin: 0 }}>Total: Rs {total}</h3>
             </div>
 
-            {/* NEXT */}
-            <button
-                disabled={total === 0}
-                onClick={next}
-                style={{
-                    marginTop: 10,
-                    padding: "10px 20px",
-                    background: "black",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 5
-                }}
-            >
-                Continue
-            </button>
+            {/* NAVIGATION */}
+            <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+                <button onClick={() => navigate("/step3")} style={secondaryBtn}>Back</button>
+                <button
+                    onClick={next}
+                    style={primaryBtn}
+                >
+                    {total > 0 ? "Continue" : "Skip Food"}
+                </button>
+            </div>
         </div>
     );
 }
+
+const circleBtn = {
+    width: 30,
+    height: 30,
+    borderRadius: "50%",
+    border: "1px solid #ccc",
+    background: "#fff",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 18
+};
+
+const primaryBtn = {
+    padding: "10px 20px",
+    background: "black",
+    color: "white",
+    border: "none",
+    borderRadius: 5,
+    cursor: "pointer",
+    flex: 1
+};
+
+const secondaryBtn = {
+    padding: "10px 20px",
+    background: "white",
+    color: "black",
+    border: "1px solid black",
+    borderRadius: 5,
+    cursor: "pointer"
+};
