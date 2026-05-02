@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.env
+*.log
+maryam_phase3_frontend.zip
