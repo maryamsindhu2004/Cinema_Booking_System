@@ -33,7 +33,7 @@ async function initDb() {
                     ALTER TABLE Users ADD isAdmin BIT DEFAULT 0
                 END
 
-                -- AUTO-FIX: Add admin response fields to Feedback
+                -- AUTO-FIX: Add adminResponse/respondedAt to Feedback
                 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Feedback') AND name = 'adminResponse')
                 BEGIN
                     ALTER TABLE Feedback ADD adminResponse NVARCHAR(MAX)
@@ -41,6 +41,12 @@ async function initDb() {
                 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Feedback') AND name = 'respondedAt')
                 BEGIN
                     ALTER TABLE Feedback ADD respondedAt DATETIME
+                END
+
+                -- AUTO-FIX: Add isFree column to FoodOrderDetail
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FoodOrderDetail') AND name = 'isFree')
+                BEGIN
+                    ALTER TABLE FoodOrderDetail ADD isFree BIT DEFAULT 0
                 END
             `);
             console.log('✅ Loyalty system verified.');
@@ -61,7 +67,7 @@ async function initDb() {
             { name: 'BookingSeat', query: `CREATE TABLE BookingSeat (bookingId INT NOT NULL, seatId INT NOT NULL, PRIMARY KEY (bookingId, seatId), FOREIGN KEY (bookingId) REFERENCES Booking(bookingId) ON DELETE CASCADE, FOREIGN KEY (seatId) REFERENCES Seat(seatId))` },
             { name: 'Item', query: `CREATE TABLE Item (itemId INT PRIMARY KEY IDENTITY(1,1), itemName VARCHAR(100) NOT NULL, basePrice DECIMAL(10,2) NOT NULL CHECK (basePrice >= 0))` },
             { name: 'FoodOrder', query: `CREATE TABLE FoodOrder (foodOrderId INT PRIMARY KEY IDENTITY(1,1), bookingId INT NOT NULL, orderDate DATETIME DEFAULT GETDATE(), totalAmount DECIMAL(10,2) DEFAULT 0 CHECK (totalAmount >= 0), FOREIGN KEY (bookingId) REFERENCES Booking(bookingId) ON DELETE CASCADE)` },
-            { name: 'FoodOrderDetail', query: `CREATE TABLE FoodOrderDetail (foodOrderId INT NOT NULL, itemId INT NOT NULL, quantity INT CHECK (quantity > 0), PRIMARY KEY (foodOrderId, itemId), FOREIGN KEY (foodOrderId) REFERENCES FoodOrder(foodOrderId) ON DELETE CASCADE, FOREIGN KEY (itemId) REFERENCES Item(itemId))` },
+            { name: 'FoodOrderDetail', query: `CREATE TABLE FoodOrderDetail (foodOrderId INT NOT NULL, itemId INT NOT NULL, quantity INT CHECK (quantity > 0), isFree BIT DEFAULT 0, PRIMARY KEY (foodOrderId, itemId), FOREIGN KEY (foodOrderId) REFERENCES FoodOrder(foodOrderId) ON DELETE CASCADE, FOREIGN KEY (itemId) REFERENCES Item(itemId))` },
             { name: 'Discount', query: `CREATE TABLE Discount (discountId INT PRIMARY KEY IDENTITY(1,1), discountCode VARCHAR(50) UNIQUE NOT NULL, discountType VARCHAR(20) CHECK (discountType IN ('PERCENTAGE','FIXED')), discountValue DECIMAL(10,2) CHECK (discountValue >= 0), validFrom DATE, validTo DATE, applicableDays VARCHAR(50), isActive BIT DEFAULT 1)` },
             { name: 'Refund', query: `CREATE TABLE Refund (refundId INT PRIMARY KEY IDENTITY(1,1), bookingId INT NOT NULL, refundDate DATETIME DEFAULT GETDATE(), refundAmount DECIMAL(10,2) NOT NULL, refundStatus VARCHAR(50) DEFAULT 'Processed', FOREIGN KEY (bookingId) REFERENCES Booking(bookingId))` },
             { name: 'Feedback', query: `CREATE TABLE Feedback (feedbackId INT PRIMARY KEY IDENTITY(1,1), userId INT NOT NULL, rating INT CHECK (rating >= 1 AND rating <= 5), comments NVARCHAR(MAX), adminResponse NVARCHAR(MAX), respondedAt DATETIME, submitted_at DATETIME DEFAULT GETDATE(), FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE)` }

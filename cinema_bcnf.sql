@@ -1,3 +1,5 @@
+
+--24L0728, 24L0732, 24L0617
 /* ===============================================================
    THEATRO CINEMA SYSTEM - BCNF UPDATED SCHEMA
    =============================================================== */
@@ -163,6 +165,7 @@ CREATE TABLE FoodOrderDetail (
     foodOrderId INT NOT NULL,
     itemId INT NOT NULL,
     quantity INT CHECK (quantity > 0),
+    isFree BIT DEFAULT 0,  -- 1 = free reward item (nachos redemption, popcorn for 4+ seats)
     PRIMARY KEY (foodOrderId, itemId),
     FOREIGN KEY (foodOrderId) REFERENCES FoodOrder(foodOrderId) ON DELETE CASCADE,
     FOREIGN KEY (itemId) REFERENCES Item(itemId)
@@ -1062,7 +1065,7 @@ select* from Feedback
 
 
 -- ===============================================================
--- ACADEMIC REQUIREMENTS: VIEWS, STORED PROCEDURES, TRIGGERS
+-- VIEWS, STORED PROCEDURES, TRIGGERS
 -- ===============================================================
 
 GO
@@ -1200,3 +1203,25 @@ BEGIN
     END
 END;
 GO
+
+-- =============================================
+-- ADD isFree COLUMN TO FoodOrderDetail
+-- Tracks whether a food item was a free reward
+-- (nachos redemption via 20 pts, or popcorn for 4+ seats)
+-- =============================================
+IF NOT EXISTS (
+    SELECT * FROM sys.columns 
+    WHERE object_id = OBJECT_ID('FoodOrderDetail') AND name = 'isFree'
+)
+BEGIN
+    ALTER TABLE FoodOrderDetail ADD isFree BIT DEFAULT 0;
+    PRINT 'Column isFree added to FoodOrderDetail.';
+END
+ELSE
+BEGIN
+    PRINT 'Column isFree already exists in FoodOrderDetail.';
+END
+GO
+select * from FoodOrderDetail
+
+DROP TRIGGER trg_AddLoyaltyPoints;

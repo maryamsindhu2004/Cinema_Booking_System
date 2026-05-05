@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
 
         res.json({
             success: true,
-            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, isAdmin: user.isAdmin || 0 }
+            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, isAdmin: user.isAdmin || 0, loyaltyPoints: user.loyaltyPoints || 0 }
         });
 
     } catch (error) {
@@ -87,7 +87,7 @@ router.post('/login', async (req, res) => {
 
         res.json({
             success: true,
-            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, isAdmin: user.isAdmin || 0 }
+            user: { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, isAdmin: user.isAdmin || 0, loyaltyPoints: user.loyaltyPoints || 0 }
         });
 
     } catch (error) {

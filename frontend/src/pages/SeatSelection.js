@@ -11,6 +11,9 @@ function SeatSelection() {
     const [selectedItems, setSelectedItems] = useState({}); // { itemId: quantity }
     const [showData, setShowData] = useState(null);
     const [bookingStatus, setBookingStatus] = useState(null);
+    const [redeemNachos, setRedeemNachos] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('Cash');
+    const [needsWheelchair, setNeedsWheelchair] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('theatro_user'));
 
@@ -51,17 +54,19 @@ function SeatSelection() {
         return total + (seat ? seat.priceSeat : 0);
     }, 0);
 
+    const nachosItem = menuItems.find(i => i.itemName === 'Nachos');
+    // Only apply the free-nachos discount if user has actually added Nachos to cart
+    const nachosInCart = nachosItem ? (selectedItems[nachosItem.itemId] || 0) : 0;
+    const nachosDiscount = (redeemNachos && nachosItem && nachosInCart > 0) ? parseFloat(nachosItem.basePrice) : 0;
+
     const foodTotal = Object.entries(selectedItems).reduce((total, [itemId, qty]) => {
         const item = menuItems.find(i => i.itemId === parseInt(itemId));
-        return total + (item ? item.basePrice * qty : 0);
-    }, 0);
+        return total + (item ? parseFloat(item.basePrice) * qty : 0);
+    }, 0) - nachosDiscount;
 
     const screenPrice = showData ? showData.priceScreen : 0;
     const totalAmount = seatTotal + foodTotal + screenPrice;
 
-    const [redeemNachos, setRedeemNachos] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('Cash');
-    const [needsWheelchair, setNeedsWheelchair] = useState(false);
 
     const handleConfirm = async () => {
         if (selectedSeats.length === 0) {
@@ -93,6 +98,17 @@ function SeatSelection() {
             const data = await res.json();
 
             if (data.success) {
+                // Refresh user's loyalty points from the server and update localStorage
+                try {
+                    const uid = user.userId || user.id;
+                    const userRes = await fetch(`/api/user/${uid}`);
+                    const userData = await userRes.json();
+                    if (userData.success) {
+                        const updatedUser = { ...user, loyaltyPoints: userData.data.loyaltyPoints };
+                        localStorage.setItem('theatro_user', JSON.stringify(updatedUser));
+                    }
+                } catch (e) { /* non-critical, ignore */ }
+
                 setBookingStatus('success');
                 setTimeout(() => navigate('/'), 3000);
             } else {

@@ -27,7 +27,7 @@ app.get('/api/movies', async (req, res) => {
     try {
         const { genre, language, search, showingOnly } = req.query;
         const pool = await getConnection();
-        
+
         let query = `
             SELECT m.*, 
             (SELECT STRING_AGG(g2.genreName, ', ') 
@@ -71,7 +71,7 @@ app.get('/api/movies/:id/shows', async (req, res) => {
     try {
         const { weekendOnly } = req.query;
         const pool = await getConnection();
-        
+
         let query = `
             SELECT 
                 s.showId, s.movieId, s.screenId, s.showDate, s.isCancelled,
@@ -96,7 +96,7 @@ app.get('/api/movies/:id/shows', async (req, res) => {
         const result = await pool.request()
             .input('id', req.params.id)
             .query(query);
-        
+
         console.log(`📡 [API] Found ${result.recordset.length} shows for Movie ${req.params.id} (WeekendOnly: ${weekendOnly})`);
         res.json({ success: true, data: result.recordset });
     } catch (error) {
@@ -137,7 +137,7 @@ app.get('/api/shows/:id/seats', async (req, res) => {
         }
 
         const pool = await getConnection();
-        
+
         // Debug: Check if show exists first
         const showCheck = await pool.request().input('sid', showId).query('SELECT screenId, showDate FROM ShowTable WHERE showId = @sid');
         if (showCheck.recordset.length === 0) {
@@ -164,12 +164,12 @@ app.get('/api/shows/:id/seats', async (req, res) => {
                 LEFT JOIN BookingSeat bs ON s.seatId = bs.seatId AND bs.bookingId IN (SELECT bookingId FROM Booking WHERE showId = @sid AND bookingStatus = 1)
                 WHERE s.screenId = @scid
             `);
-        
+
         if (result.recordset.length > 0) {
             const first = result.recordset[0];
             console.log(`💰 [PRICING] Day: ${showDate.toDateString()}, Base: ${first.basePrice}, Fee: ${first.weekendFee}, Total: ${first.priceSeat}`);
         }
-        
+
         console.log(`🔍 [DEBUG] Show: ${showId}, Screen: ${screenId}, Seats: ${result.recordset.length}`);
         res.json({ success: true, data: result.recordset });
     } catch (error) {
@@ -192,7 +192,7 @@ app.get('/api/items', async (req, res) => {
 // POST /api/bookings - The core booking logic + Loyalty Rewards
 app.post('/api/bookings', async (req, res) => {
     const { userId, showId, seats, items, totalAmount, redeemNachos, paymentMethod, needsWheelchair } = req.body;
-    
+
     if (!userId || !showId || !seats || seats.length === 0) {
         return res.status(400).json({ success: false, error: 'Missing booking info' });
     }
@@ -203,19 +203,16 @@ app.post('/api/bookings', async (req, res) => {
         transaction = pool.transaction();
         await transaction.begin();
 
-        // 1. Loyalty Checks (Points & Discount)
+        // 1. Loyalty Checks
         const userRes = await transaction.request().input('uid', userId).query('SELECT loyaltyPoints FROM Users WHERE id = @uid');
         let points = userRes.recordset[0].loyaltyPoints || 0;
         let appliedDiscount = 0;
         let freeNachosReward = false;
 
         if (redeemNachos && points >= 20) {
-            points -= 20;
             freeNachosReward = true;
             await transaction.request().input('uid', userId).query('UPDATE Users SET loyaltyPoints = loyaltyPoints - 20 WHERE id = @uid');
-        } else if (points >= 50) {
-            appliedDiscount = 0.10;
-            await transaction.request().input('uid', userId).query('UPDATE Users SET loyaltyPoints = loyaltyPoints - 50 WHERE id = @uid');
+            console.log(`🎁 [LOYALTY] Redeemed nachos: -20 pts from User ${userId} (had ${points} pts)`);
         }
 
         // 2. Create the Main Booking
@@ -225,7 +222,7 @@ app.post('/api/bookings', async (req, res) => {
             .input('pm', paymentMethod || 'Cash')
             .input('wheel', needsWheelchair ? 1 : 0)
             .query('INSERT INTO Booking (userId, showId, bookingDate, bookingStatus, paymentMethod, needsWheelchair) VALUES (@userId, @showId, GETDATE(), 1, @pm, @wheel); SELECT SCOPE_IDENTITY() AS bookingId;');
-        
+
         const bookingId = bookingResult.recordset[0].bookingId;
 
         // 3. Link Seats
@@ -238,7 +235,7 @@ app.post('/api/bookings', async (req, res) => {
 
         // 4. Handle Food & Rewards
         let foodItems = items ? [...items] : [];
-        
+
         // Reward 1: Free Popcorn (4+ tickets)
         if (seats.length >= 4) {
             const popcornRes = await transaction.request().query("SELECT itemId FROM Item WHERE itemName = 'Small Popcorn'");
@@ -259,32 +256,34 @@ app.post('/api/bookings', async (req, res) => {
             const foodOrderResult = await transaction.request()
                 .input('bid', bookingId)
                 .query('INSERT INTO FoodOrder (bookingId, orderDate) OUTPUT INSERTED.foodOrderId VALUES (@bid, GETDATE())');
-            
+
             const foodOrderId = foodOrderResult.recordset[0].foodOrderId;
             let foodTotal = 0;
-            console.log(`📦 [LOYALTY] Processing ${foodItems.length} items...`);
 
             for (const item of foodItems) {
                 await transaction.request()
                     .input('foid', foodOrderId)
                     .input('itemId', item.itemId)
                     .input('qty', item.quantity)
-                    .query('INSERT INTO FoodOrderDetail (foodOrderId, itemId, quantity) VALUES (@foid, @itemId, @qty)');
-                
+                    .input('isFree', item.isFree ? 1 : 0)
+                    .query('INSERT INTO FoodOrderDetail (foodOrderId, itemId, quantity, isFree) VALUES (@foid, @itemId, @qty, @isFree)');
+
                 const itemRes = await transaction.request().input('iid', item.itemId).query('SELECT basePrice FROM Item WHERE itemId = @iid');
-                
+
                 if (itemRes.recordset.length > 0 && !item.isFree) {
-                    const price = itemRes.recordset[0].basePrice;
-                    foodTotal += (price * item.quantity);
+                    // parseFloat ensures DECIMAL from SQL doesn't behave as string
+                    const price = parseFloat(itemRes.recordset[0].basePrice);
+                    const qty   = parseInt(item.quantity, 10);
+                    foodTotal += (price * qty);
                 }
             }
 
+            // 1 point earned per Rs 100 of PAID food
             const earnedPoints = Math.floor(foodTotal / 100);
-            console.log(`💰 [LOYALTY] Calculated Total for Points: Rs. ${foodTotal} -> Points: ${earnedPoints}`);
+            console.log(`💰 [LOYALTY] Paid food total: Rs. ${foodTotal} → +${earnedPoints} pts for User ${userId}`);
 
             if (earnedPoints > 0) {
                 await transaction.request().input('uid', userId).input('pts', earnedPoints).query('UPDATE Users SET loyaltyPoints = ISNULL(loyaltyPoints, 0) + @pts WHERE id = @uid');
-                console.log(`✨ [LOYALTY] Successfully added ${earnedPoints} points to User ${userId}`);
             }
         }
 
@@ -304,7 +303,7 @@ app.get('/api/user/:userId', async (req, res) => {
         const result = await pool.request()
             .input('uid', req.params.userId)
             .query('SELECT id, name, email, phoneNo, loyaltyPoints, isAdmin FROM Users WHERE id = @uid');
-        
+
         if (result.recordset.length > 0) {
             console.log(`👤 [USER] Syncing data for ${result.recordset[0].name}: ${result.recordset[0].loyaltyPoints} pts (Admin: ${result.recordset[0].isAdmin})`);
             res.json({ success: true, data: result.recordset[0] });
@@ -363,7 +362,7 @@ app.get('/api/bookings/user/:userId', async (req, res) => {
                         FROM FoodOrder fo 
                         JOIN FoodOrderDetail fod ON fo.foodOrderId = fod.foodOrderId 
                         JOIN Item i ON fod.itemId = i.itemId 
-                        WHERE fo.bookingId = b.bookingId
+                        WHERE fo.bookingId = b.bookingId AND ISNULL(fod.isFree, 0) = 0
                     ), 0) as totalAmount
                 FROM Booking b
                 JOIN ShowTable s ON b.showId = s.showId
@@ -398,12 +397,13 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
                 SELECT 
                     b.userId,
                     ISNULL((SELECT SUM(st.priceSeat) FROM BookingSeat bs JOIN Seat se ON bs.seatId = se.seatId JOIN SeatType st ON se.seatTypeId = st.seatTypeId WHERE bs.bookingId = @bid), 0) as seatTotal,
-                    ISNULL((SELECT SUM(i.basePrice * fod.quantity) FROM FoodOrder fo JOIN FoodOrderDetail fod ON fo.foodOrderId = fod.foodOrderId JOIN Item i ON fod.itemId = i.itemId WHERE fo.bookingId = @bid), 0) as foodTotal
+                    -- Only count PAID food items for points deduction (exclude free rewards)
+                    ISNULL((SELECT SUM(i.basePrice * fod.quantity) FROM FoodOrder fo JOIN FoodOrderDetail fod ON fo.foodOrderId = fod.foodOrderId JOIN Item i ON fod.itemId = i.itemId WHERE fo.bookingId = @bid AND ISNULL(fod.isFree, 0) = 0), 0) as foodTotal
                 FROM Booking b WHERE b.bookingId = @bid
             `);
-        
+
         if (infoResult.recordset.length === 0) throw new Error("Booking not found");
-        
+
         const { userId, seatTotal, foodTotal } = infoResult.recordset[0];
         const refundAmount = seatTotal + foodTotal;
 
@@ -458,7 +458,7 @@ app.post('/api/feedback', async (req, res) => {
             .input('rate', rating)
             .input('msg', comments || '')
             .query('INSERT INTO Feedback (userId, rating, comments) VALUES (@uid, @rate, @msg)');
-        
+
         console.log(`💬 [FEEDBACK] New feedback from User ${userId}: ${rating} stars`);
         res.json({ success: true, message: 'Feedback submitted! Thank you.' });
     } catch (error) {
@@ -501,7 +501,7 @@ app.post('/api/admin/feedback/:id/respond', async (req, res) => {
             .input('fid', feedbackId)
             .input('res', response)
             .query('UPDATE Feedback SET adminResponse = @res, respondedAt = GETDATE() WHERE feedbackId = @fid');
-        
+
         console.log(`💬 [ADMIN] Responded to Feedback ID: ${feedbackId}`);
         res.json({ success: true, message: 'Response submitted successfully!' });
     } catch (error) {
@@ -534,7 +534,7 @@ app.get('/api/admin/revenue', async (req, res) => {
             GROUP BY YEAR(bookingDate), MONTH(bookingDate)
             ORDER BY month DESC
         `);
-        
+
         console.log(`💰 [ADMIN] Revenue data loaded: ${result.recordset.length} months`);
         res.json({ success: true, data: result.recordset });
     } catch (error) {
@@ -556,5 +556,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, '127.0.0.1', async () => {
     console.log(`🎭 THEATRO Backend on http://127.0.0.1:${PORT}`);
     await initDb();
-    setInterval(() => console.log(`💓 [${new Date().toLocaleTimeString()}] Heartbeat: Backend is Alive`), 10000);
+    setInterval(() => console.log(` [${new Date().toLocaleTimeString()}] Heartbeat: Backend is Alive`), 10000);
 });
